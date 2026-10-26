@@ -5,6 +5,8 @@ from .contracts import digest, validate
 from .tools import ToolContext, resolve
 from .model import ResponseContractError
 from . import prompts
+from .programmer import Programmer, OPERATION_SCHEMA
+from .semantic import implementations, implementation_maps
 
 PLAN_SCHEMA = {
     "type": "object",
@@ -19,10 +21,11 @@ PLAN_SCHEMA = {
 STEP_SCHEMA = {
     "type": "object",
     "properties": {
-        "action": {"enum": ["tool", "program", "finish"]},
+        "action": {"enum": ["tool", "skill", "program", "programmer", "finish"]},
         "id": {"type": "string"},
         "arguments": {"type": "object"},
         "answer": {},
+        "operation": OPERATION_SCHEMA,
     },
     "required": ["action"],
     "additionalProperties": False,
@@ -31,7 +34,15 @@ STEP_SCHEMA = {
 
 class Runtime:
     def __init__(
-        self, model, worker=None, max_steps=32, max_tool_calls=64, retrieval_limit=8
+        self,
+        model,
+        worker=None,
+        max_steps=32,
+        max_tool_calls=64,
+        retrieval_limit=8,
+        allow_programmer=True,
+        max_programs_per_task=2,
+        programmer_repair_limit=1,
     ):
         self.model, self.worker = model, worker
         self.max_steps, self.max_tool_calls, self.retrieval_limit = (
@@ -39,10 +50,109 @@ class Runtime:
             max_tool_calls,
             retrieval_limit,
         )
+        if max_programs_per_task < 0:
+            raise ValueError("Programmer task limit cannot be negative")
+        self.allow_programmer = allow_programmer
+        self.max_programs_per_task = max_programs_per_task
+        self.programmer_repair_limit = programmer_repair_limit
+        self.programmer = Programmer(model, programmer_repair_limit)
+
+    @staticmethod
+    def _preflight(asset, inputs, ctx):
+        if asset.get("preconditions") or asset.get("entry_constraints"):
+            verifier = getattr(ctx.environment, "verify_preconditions", None)
+            conditions = asset.get("preconditions", []) + asset.get(
+                "entry_constraints", []
+            )
+            if (
+                verifier is None
+                or verifier(deepcopy(conditions), deepcopy(inputs)) is not True
+            ):
+                raise ValueError("Preconditions are unresolved or not satisfied")
+
+    @staticmethod
+    def _effects(asset, inputs, result, ctx):
+        if result["status"] == "ok" and asset.get("validator"):
+            verifier = getattr(ctx.environment, "verify_contract", None)
+            if (
+                verifier is None
+                or verifier(
+                    deepcopy(asset["validator"]), deepcopy(inputs), deepcopy(result)
+                )
+                is not True
+            ):
+                raise ValueError("Semantic validator did not verify the result")
+        if result["status"] == "ok" and asset.get("effects"):
+            verifier = getattr(ctx.environment, "verify_effects", None)
+            if (
+                verifier is None
+                or verifier(
+                    deepcopy(asset["effects"]), deepcopy(inputs), {}, deepcopy(result)
+                )
+                is not True
+            ):
+                raise ValueError("Declared effects were not verified")
+
+    def skill(self, bank, skill_id, inputs, ctx, preferred=None):
+        skill = bank.skills[skill_id]
+        validate(inputs, skill.get("input_schema", {"type": "object"}))
+        self._preflight(skill, inputs, ctx)
+        ready = []
+        for binding in implementations(skill):
+            pid = binding["program_id"]
+            if preferred and pid != preferred:
+                continue
+            program = bank.programs[pid]
+            try:
+                imap, omap = implementation_maps(skill, program, binding)
+                args = (
+                    {p: inputs[s] for p, s in imap.items() if s in inputs}
+                    if imap
+                    else deepcopy(inputs)
+                )
+                validate(args, program["input_schema"])
+                self._preflight(program, args, ctx)
+                item = (pid, args, omap)
+                if item not in ready:
+                    ready.append(item)
+            except (ValueError, KeyError):
+                continue
+        if len(ready) != 1:
+            raise ValueError(
+                "No ready implementation"
+                if not ready
+                else "Ambiguous implementations require an explicit Program choice"
+            )
+        pid, args, mapping = ready[0]
+        result = deepcopy(self.program(bank, pid, args, ctx))
+        if result["status"] == "ok":
+            result["outputs"] = (
+                {
+                    s: result["outputs"][p]
+                    for s, p in mapping.items()
+                    if p in result["outputs"]
+                }
+                if mapping
+                else result["outputs"]
+            )
+            validate(result["outputs"], skill.get("output_schema", {"type": "object"}))
+            self._effects(skill, inputs, result, ctx)
+        ctx.events.append(
+            {
+                "type": "skill",
+                "id": skill_id,
+                "program_id": pid,
+                "arguments": deepcopy(inputs),
+                "result": deepcopy(result),
+            }
+        )
+        return result
 
     def program(self, bank, program_id, inputs, ctx):
         program = bank.programs[program_id]
         validate(inputs, program["input_schema"])
+        self._preflight(program, inputs, ctx)
+        start = len(ctx.events)
         if program.get("format", "python") == "ir":
             from .ir import execute
 
@@ -53,22 +163,27 @@ class Runtime:
             result = self.worker.execute(program, inputs, ctx)
         if result["status"] == "ok":
             validate(result["outputs"], program["output_schema"])
+        self._effects(program, inputs, result, ctx)
         ctx.events.append(
             {
                 "type": "program",
                 "id": program_id,
                 "arguments": deepcopy(inputs),
                 "result": deepcopy(result),
+                "tool_event_start": start,
             }
         )
         return result
 
     def run(self, task, environment, bank, key):
         ctx = ToolContext(environment, self.max_tool_calls)
+        ctx.programmer_calls = 0
+        frozen_hash = bank.hash
+        overlay = bank.clone()
         try:
-            return self._execute(task, ctx, bank, key)
+            trace = self._execute(task, ctx, overlay, key)
         except ResponseContractError as exc:
-            return {
+            trace = {
                 "task": task.public(),
                 "answer": None,
                 "events": ctx.events,
@@ -76,6 +191,80 @@ class Runtime:
                 "error": str(exc),
                 "bank_hash": bank.hash,
             }
+        if bank.hash != frozen_hash:
+            raise ValueError("Runtime modified its parent Bank")
+        trace["bank_hash"] = frozen_hash
+        trace["task_overlay_hash"] = overlay.hash
+        trace["programmer_calls"] = ctx.programmer_calls
+        trace["retrieved_skill_ids"] = [
+            s["id"]
+            for s in bank.retrieve(task.instruction, self.retrieval_limit)["skills"]
+        ]
+        return trace
+
+    def _programmer_policy(self, ctx):
+        return {
+            "enabled": self.allow_programmer and self.worker is not None,
+            "scope": "task_local",
+            "remaining": max(0, self.max_programs_per_task - ctx.programmer_calls),
+            "structural_repair_limit": self.programmer_repair_limit,
+        }
+
+    def _act(self, decision, task, ctx, bank, key):
+        action = decision["action"]
+        args = decision.get("arguments", {})
+        if action == "programmer":
+            policy = self._programmer_policy(ctx)
+            if not policy["enabled"] or not policy["remaining"]:
+                raise ValueError("Runtime Programmer is disabled or exhausted")
+            self._preflight(decision["operation"], args, ctx)
+            ctx.programmer_calls += 1
+            # Provider/ledger failures propagate. A failed live execution is never
+            # automatically repeated by structural repair.
+            program, receipt = self.programmer.compile(
+                decision["operation"], args, task, ctx, key + "/programmer"
+            )
+            if program["id"] in bank.programs:
+                raise ValueError("Task-local Program ID collision")
+            bank.programs[program["id"]] = program
+            ctx.events.append({"type": "runtime_programmer", **receipt})
+            pid = program["id"]
+        elif action == "program":
+            pid = decision["id"]
+        else:
+            pid = None
+        try:
+            if pid:
+                result = self.program(bank, pid, args, ctx)
+                if action == "programmer":
+                    ctx.events.append(
+                        {
+                            "type": "runtime_qualification",
+                            "program_id": pid,
+                            "status": result["status"],
+                            "scope": "task_local",
+                            "persistent_admission": False,
+                        }
+                    )
+                return result
+            if action == "skill":
+                return self.skill(bank, decision["id"], args, ctx)
+            if action == "tool":
+                return ctx.call(decision["id"], args)
+            raise ValueError("Unsupported Runtime action")
+        except (ValueError, KeyError, RuntimeError, TimeoutError) as exc:
+            if action == "programmer":
+                ctx.events.append(
+                    {
+                        "type": "runtime_qualification",
+                        "program_id": pid,
+                        "status": "failed",
+                        "error": str(exc),
+                        "scope": "task_local",
+                        "persistent_admission": False,
+                    }
+                )
+            raise ValueError("Execution failed: " + str(exc)) from exc
 
     def _execute(self, task, ctx, bank, key):
         retrieved = bank.retrieve(task.instruction, self.retrieval_limit)
@@ -119,16 +308,24 @@ class Runtime:
                             and node.get("skill_id")
                             and node.get("execution_mode") != "dynamic"
                         ):
-                            available = bank.skills[node["skill_id"]].get(
-                                "program_ids", []
-                            )
-                            pid = available[0] if available else None
+                            available = implementations(bank.skills[node["skill_id"]])
+                            if available:
+                                result = self.skill(
+                                    bank,
+                                    node["skill_id"],
+                                    args,
+                                    ctx,
+                                    node.get("preferred_program_id"),
+                                )
+                                if result["status"] != "ok":
+                                    break
+                                outputs[node["id"]] = result["outputs"]
                         if pid:
                             result = self.program(bank, pid, args, ctx)
                             if result["status"] != "ok":
                                 break
                             outputs[node["id"]] = result["outputs"]
-                        else:
+                        elif node["id"] not in outputs:
                             required_outputs = [
                                 ref.get("field", "").split(".")[0]
                                 for ref in skeleton.get("outputs", {}).values()
@@ -156,6 +353,7 @@ class Runtime:
                                         "observation": ctx.observe(),
                                         "tools": ctx.available_tools(),
                                         "history": ctx.events,
+                                        "programmer": self._programmer_policy(ctx),
                                         "finish_output_schema": schema,
                                         "programs": [
                                             {
@@ -172,17 +370,13 @@ class Runtime:
                                     validate(decision.get("answer"), schema)
                                     outputs[node["id"]] = decision["answer"]
                                     break
-                                if decision["action"] == "tool":
-                                    ctx.call(
-                                        decision["id"], decision.get("arguments", {})
-                                    )
-                                else:
-                                    self.program(
-                                        bank,
-                                        decision["id"],
-                                        decision.get("arguments", {}),
-                                        ctx,
-                                    )
+                                self._act(
+                                    decision,
+                                    task,
+                                    ctx,
+                                    bank,
+                                    key + "/node_" + node["id"] + "/" + str(steps),
+                                )
                                 steps += 1
                             if node["id"] not in outputs:
                                 break
@@ -193,7 +387,7 @@ class Runtime:
                                 "outputs": outputs[node["id"]],
                             }
                         )
-                    except (ValueError, KeyError, RuntimeError, TimeoutError) as exc:
+                    except (ValueError, KeyError, TimeoutError) as exc:
                         ctx.events.append(
                             {
                                 "type": "skeleton_error",
@@ -238,6 +432,7 @@ class Runtime:
                     "programs": program_catalog,
                     "history": ctx.events,
                     "remaining_tool_calls": ctx.remaining_calls(),
+                    "programmer": self._programmer_policy(ctx),
                 },
                 STEP_SCHEMA,
             )
@@ -247,13 +442,8 @@ class Runtime:
                 reason = "finished"
                 break
             try:
-                if action == "tool":
-                    ctx.call(decision["id"], decision.get("arguments", {}))
-                elif action == "program":
-                    self.program(
-                        bank, decision["id"], decision.get("arguments", {}), ctx
-                    )
-            except (ValueError, KeyError, RuntimeError, TimeoutError) as exc:
+                self._act(decision, task, ctx, bank, key + "/step_" + str(step))
+            except (ValueError, KeyError, TimeoutError) as exc:
                 ctx.events.append(
                     {"type": "operation_error", "action": decision, "error": str(exc)}
                 )

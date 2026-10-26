@@ -75,6 +75,13 @@ def main():
                 "config_hash": digest(cfg),
                 "bank_hash": before,
                 "split": args.split,
+                "source_hash": digest(
+                    {
+                        p.name: p.read_text(encoding="utf-8")
+                        for p in Path(__file__).parent.glob("*.py")
+                    }
+                ),
+                "tasks_hash": digest([t.public() for t in suite.tasks(args.split)]),
             }
             if (root / "evaluation.json").exists() and read(
                 root / "evaluation.json"

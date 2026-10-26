@@ -22,6 +22,9 @@ runtime:
   max_steps: 32
   max_tool_calls: 64
   retrieval_limit: 8
+  allow_programmer: true
+  max_programs_per_task: 2
+  programmer_repair_limit: 1
 learning:
   max_proposals: 8
   repair_limit: 1

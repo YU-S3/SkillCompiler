@@ -20,6 +20,10 @@ Allowed statuses are `ok`, `not_found`, `needs_input`, and `blocked`. Outputs mu
 
 `ctx.observe()`, `ctx.available_tools()`, and `ctx.remaining_calls()` expose the public environment. An optional `ctx.read_result(...)` delegates to the adapter's public result reader and consumes one tool call. For a named `read_result` native tool, use `ctx.call()` and declare that tool in `allowed_tools`.
 
+The direct `ctx.read_result(...)` form also requires `read_result` in `allowed_tools`.
+
+For semantic contracts, adapters can implement `verify_preconditions(conditions, inputs)`, `verify_effects(effects, inputs, variables, result)`, and `verify_contract(validator, inputs, result)`. They must verify public execution facts without consulting gold answers. When an asset declares one of these checks, a missing verifier or a return value other than `True` blocks admission/execution. JSON input validation alone cannot establish semantic prerequisites.
+
 ## Qualification
 
 A proposed Program names replay cases from the current training material. Each case specifies:
@@ -36,6 +40,8 @@ A proposed Program names replay cases from the current training material. Each c
 The Host resolves the expected object from an executed observation, resets the environment, replays the declared native prefix, and executes the Program in Docker. It compares the actual output with that observed object. Model-supplied expected answers are not accepted. Prefix indices must precede the reference event.
 
 Passing replay establishes compatibility with those observations, not general correctness. Held-out validation selects the final Bank. The framework does not automatically confer universal correctness or a permanent success label on a Program.
+
+Runtime can also request a new task-local Program during Train, Val or Test. This path records structural admission and actual bounded execution separately, without inserting the result into a persistent Bank. See [semantic alignment and Runtime programming](semantic-alignment.md) for the complete interface and merge gates.
 
 ## Model boundary
 

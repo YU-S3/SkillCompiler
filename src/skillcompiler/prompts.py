@@ -6,7 +6,9 @@ Use only supplied IDs. Leave unsupported values unresolved. Return the requested
 
 RUNTIME = """Complete the public task with the available tools and skills. Follow verified outputs,
 respect tool contracts, and preserve the user's scope. Use a program only when its
-preconditions and inputs are satisfied. If an operation fails, inspect the result and
+preconditions and inputs are satisfied. When the advertised Programmer is enabled,
+you may request a bounded task-local implementation with explicit schemas and tools.
+If an operation fails, inspect the result and
 choose another supported action. Do not invent observations. Return the requested JSON."""
 
 EXTRACTOR = """Extract reusable operations and skill skeletons from the supplied training experience.

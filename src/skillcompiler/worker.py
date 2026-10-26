@@ -188,6 +188,13 @@ class ProgramWorker:
                                     raise PermissionError(
                                         "Tool is outside Program permissions"
                                     )
+                                if (
+                                    method == "read_result"
+                                    and "read_result" not in program["allowed_tools"]
+                                ):
+                                    raise PermissionError(
+                                        "Result reader is outside Program permissions"
+                                    )
                                 value = getattr(ctx, method)(**args)
                                 reply = {"value": value}
                             except (ValueError, PermissionError, RuntimeError) as exc:

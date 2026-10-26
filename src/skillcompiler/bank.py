@@ -76,6 +76,12 @@ class Bank:
             for p in s.get("program_ids", []):
                 if p not in self.programs:
                     raise ValueError("Dangling Program reference")
+            from .semantic import implementation_maps
+
+            for binding in s.get("implementations", []):
+                if binding.get("program_id") not in self.programs:
+                    raise ValueError("Dangling implementation reference")
+                implementation_maps(s, self.programs[binding["program_id"]], binding)
         for p in self.programs.values():
             if not isinstance(p.get("allowed_tools"), list):
                 raise ValueError("Program needs explicit allowed_tools")
@@ -101,6 +107,11 @@ class Bank:
                     raise ValueError("Dangling Skill reference")
                 if node.get("program_id") and node["program_id"] not in self.programs:
                     raise ValueError("Dangling Program reference")
+                if (
+                    node.get("preferred_program_id")
+                    and node["preferred_program_id"] not in self.programs
+                ):
+                    raise ValueError("Dangling preferred implementation")
                 for sid in node.get("reference_skill_ids", []):
                     if sid not in self.skills:
                         raise ValueError("Dangling node guidance reference")
@@ -117,24 +128,25 @@ class Bank:
 
                 check_refs(node.get("args", {}))
                 known.add(node["id"])
+            check_refs(s.get("outputs", {})) if s["nodes"] else None
 
-    def retrieve(self, text, limit=8):
-        query = set(re.findall(r"\w+", text.lower()))
+    def retrieve(self, text, limit=8, requirement=None):
+        from .semantic import lexical_similarity, align
 
         def rank(asset):
-            words = set(
-                re.findall(
-                    r"\w+",
-                    str(asset.get("name", ""))
-                    + " "
-                    + str(asset.get("guidance", ""))
-                    + " "
-                    + str(asset.get("applicability", "")),
-                )
+            description = " ".join(
+                str(asset.get(k, "")) for k in ("name", "guidance", "applicability")
             )
-            return (-len(query & {w.lower() for w in words}), asset["id"])
+            return (-lexical_similarity(text, description), asset["id"])
 
         return {
-            "skills": sorted(self.skills.values(), key=rank)[:limit],
+            "skills": sorted(
+                (
+                    s
+                    for s in self.skills.values()
+                    if requirement is None or align(requirement, s)["status"] == "exact"
+                ),
+                key=rank,
+            )[:limit],
             "skeletons": sorted(self.skeletons.values(), key=rank)[:limit],
         }

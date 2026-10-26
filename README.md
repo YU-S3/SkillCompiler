@@ -18,16 +18,20 @@ flowchart LR
     P --> Q[Isolated replay qualification]
     L --> R[Skill refinement]
     Q --> B
-    R --> B
+    R --> C[Contract alignment and transactional merge]
+    C --> B
     B --> V[Validation selection]
     V --> F[Frozen Bank]
     F --> X[Read-only testing]
+    X --> LP[Task-local Programmer]
 ```
 
 - **Skills** describe applicability, prerequisites, procedure, and stopping conditions.
 - **Programs** implement operations with explicit schemas and public-tool permissions. Python runs in a network-isolated container; declarative programs use bounded control flow.
 - **Skill skeletons** connect operations through ordered dependencies and explicit input/output bindings. Nodes can execute a Program or ask the agent to carry out a textual operation.
-- **Refinement** proposes evidence-backed revisions, implementation replacements, or merges. Both successful and failed training episodes remain available.
+- **Contract alignment** proves role equivalence from explicit schemas, predicates, effects, cardinality and validators. It returns input/output role maps; names or similar guidance cannot prove identity.
+- **Refinement** stages evidence-backed revisions, implementation replacements and merges, replays affected executable cases, rewires consumers, and commits a new Bank checkpoint only after all checks pass. Both successful and failed training episodes remain available.
+- **Runtime programming** is available during Train, Val and Test. Generated Programs execute in the same isolated worker under the task's native-call and model budgets. Test-time Programs stay in a task-local overlay and never modify the frozen persistent Bank.
 
 ## Installation
 
@@ -64,10 +68,10 @@ The pipeline:
 
 1. Checks split disjointness and records the public input identities. Only the training order is shuffled.
 2. Solves each training batch with the current Bank and records actual tool execution and evaluator feedback.
-3. Extracts proposed updates. New Programs must reproduce declared outputs from observed training events in an isolated replay environment. One structural repair is allowed by default.
+3. Extracts proposed updates. New persistent Programs must reproduce declared outputs from observed training events in an isolated replay environment. One structural repair is allowed by default. Contract-equivalent operations align to existing roles; explicit merges require independent Train evidence, exact contract proof and source replay for executable implementations.
 4. Applies the configured number of Train-only refinement rounds.
 5. Evaluates unique Bank checkpoints on validation tasks. A candidate must exceed the current score by more than `min_gain`; ties retain the earlier Bank. Validation feedback never enters extraction or refinement.
-6. Freezes the selected Bank and evaluates the Test split. The Bank digest must remain unchanged.
+6. Freezes the selected Bank and evaluates the Test split. The Bank digest must remain unchanged. The agent can call the Programmer for a missing operation; its source, structural admission and live execution result are recorded in that task's trace, without publishing a new persistent asset.
 
 To resume, use the same command, output directory, source, configuration, and inputs. Completed task and learning checkpoints are verified and reused. A changed run identity is rejected. One process may own an output directory at a time.
 
@@ -90,6 +94,8 @@ worker:
 ```
 
 Programs cannot execute directly on the host. The worker disables networking, mounts its source read-only, drops capabilities, runs as a non-root user, and enforces time, memory, process, and RPC limits. Install any required libraries in your own image before pinning its digest. Native tool effects remain the adapter's responsibility.
+
+The same worker is used for on-demand Runtime programming in all splits. Configure `runtime.allow_programmer`, `max_programs_per_task` and `programmer_repair_limit` explicitly when changing that policy. See [semantic alignment, merge transactions and task-local programming](docs/semantic-alignment.md) for proofs, role bindings, admission gates and trace records.
 
 ## Bring an environment
 
@@ -142,7 +148,7 @@ export SKILLCOMPILER_TEST_IMAGE='python@sha256:YOUR_LOCAL_IMAGE_DIGEST'
 pytest -q tests/test_worker.py
 ```
 
-Tests cover split isolation, Train-only learning, strict validation selection, immutable testing, checkpoint identity, native-tool limits, bounded IR execution, request retries and accounting, portable Bank round trips, actual Docker execution, and source-backed Program qualification. Docker tests are skipped when no image digest is supplied. They are engineering checks, not performance claims.
+Tests cover split isolation, Train-only learning, strict validation selection, immutable testing, checkpoint identity, native-tool limits, bounded IR execution, request retries and accounting, portable Bank round trips, role-equivalence proofs, transactional merging, consumer rebinding, Test-time programming, actual Docker execution, and source-backed Program qualification. Docker tests are skipped when no image digest is supplied. They are engineering checks, not performance claims.
 
 ## Repository layout
 

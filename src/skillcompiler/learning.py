@@ -6,6 +6,7 @@ from .contracts import digest, validate
 from .tools import ToolContext
 from .model import ResponseContractError
 from . import prompts
+from .alignment import integrate
 
 PROPOSAL_SCHEMA = {
     "type": "object",
@@ -15,6 +16,24 @@ PROPOSAL_SCHEMA = {
         "programs": {"type": "array", "items": {"type": "object"}},
         "skeletons": {"type": "array", "items": {"type": "object"}},
         "remove_ids": {"type": "array", "items": {"type": "string"}},
+        "merges": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "kind": {"enum": ["skills", "programs", "skeletons"]},
+                    "source_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 2,
+                        "uniqueItems": True,
+                    },
+                    "target_id": {"type": "string"},
+                },
+                "required": ["kind", "source_ids", "target_id"],
+                "additionalProperties": False,
+            },
+        },
         "evidence": {
             "type": "array",
             "items": {
@@ -70,11 +89,14 @@ class Learner:
             "bank": bank.data(),
             "episodes": episodes,
             "asset_contract": {
-                "skill": "id, name, applicability, guidance, input_schema, output_schema, program_ids",
+                "skill": "id, name, applicability, guidance, input_schema, output_schema, preconditions, effects, validator, program_ids or implementations",
                 "program": "id, name, input_schema, output_schema, allowed_tools, trials",
                 "trial": "episode, inputs, prefix (event indices), expected_from (event index and output path)",
                 "skeleton": "id, name, nodes ordered by after dependencies; node args use task/from/literal references",
                 "evidence": "episode ID and exact event indices; all proposed assets must be grounded",
+                "semantic_contract": "Predicates have predicate, args of typed {kind: skill_input|skill_output, source_role}, effect_domain, cardinality, distinct_by. Preserve literals, types, resolution constraints and validator semantics.",
+                "implementation": "program_id; input_map maps Program inputs to Skill inputs; output_map maps Skill outputs to Program outputs",
+                "merge": "merges: kind, source_ids, new target_id. Include replacement asset. Sources must have equivalent contracts, two independent training episodes, and executable source replay. No unqualified removal.",
                 "limits": {"max_assets": self.max_proposals},
             },
         }
@@ -97,11 +119,13 @@ class Learner:
                     },
                     PROPOSAL_SCHEMA,
                 )
-                return self._apply(bank, proposal, episodes, suite, key + "/repaired")
+                return self._apply(
+                    bank, proposal, episodes, suite, key + "/repaired", refine
+                )
             except (ValueError, KeyError, TypeError, SyntaxError) as second:
                 return bank, {"decision": "rejected", "error": str(second)}
         try:
-            return self._apply(bank, proposal, episodes, suite, key)
+            return self._apply(bank, proposal, episodes, suite, key, refine)
         except (ValueError, KeyError, TypeError, SyntaxError) as exc:
             if not self.repair_limit:
                 return bank, {"decision": "rejected", "error": str(exc)}
@@ -112,11 +136,13 @@ class Learner:
                     {"original": material, "proposal": proposal, "errors": str(exc)},
                     PROPOSAL_SCHEMA,
                 )
-                return self._apply(bank, repaired, episodes, suite, key + "/repaired")
+                return self._apply(
+                    bank, repaired, episodes, suite, key + "/repaired", refine
+                )
             except (ValueError, KeyError, TypeError, SyntaxError) as second:
                 return bank, {"decision": "rejected", "error": str(second)}
 
-    def _apply(self, bank, proposal, episodes, suite, key):
+    def _apply(self, bank, proposal, episodes, suite, key, refine=False):
         if proposal["decision"] == "no_change":
             return bank, {"decision": "no_change"}
         evidence_ok(proposal, episodes)
@@ -125,14 +151,8 @@ class Learner:
             > self.max_proposals
         ):
             raise ValueError("Proposal capacity exceeded")
-        data = bank.data()
-        indexes = {k: {a["id"]: a for a in v} for k, v in data.items()}
-        for asset_id in proposal.get("remove_ids", []):
-            matches = [v for v in indexes.values() if asset_id in v]
-            if not matches:
-                raise ValueError("Cannot remove unknown asset")
-            for v in matches:
-                del v[asset_id]
+        additions = {k: deepcopy(proposal.get(k, [])) for k in ("skills", "skeletons")}
+        additions["programs"] = []
         qualification = []
         for spec in proposal.get("programs", []):
             if self.worker is None:
@@ -154,18 +174,107 @@ class Learner:
             Bank(programs=[program])
             for trial in spec["trials"]:
                 qualification.append(self._trial(program, trial, episodes, suite))
-            indexes["programs"][program["id"]] = program
-        for kind in ["skills", "skeletons"]:
-            for asset in proposal.get(kind, []):
-                indexes[kind][asset["id"]] = deepcopy(asset)
-        candidate = Bank(**{k: list(v.values()) for k, v in indexes.items()})
+            if program["id"] in bank.programs and digest(program) != digest(
+                bank.programs[program["id"]]
+            ):
+                qualification.extend(
+                    self._regression(program, program["id"], episodes, suite)
+                )
+            additions["programs"].append(program)
+        candidate, alignment = integrate(
+            bank,
+            additions,
+            proposal.get("merges", []),
+            proposal.get("remove_ids", []),
+            refine=refine,
+            evidence=proposal["evidence"],
+        )
+        from .semantic import implementations, executable_equal
+
+        for merge in proposal.get("merges", []):
+            for sid in merge["source_ids"]:
+                if merge["kind"] == "skills":
+                    if not implementations(bank.skills[sid]) and not any(
+                        sid in episode.get("retrieved_skill_ids", [])
+                        or any(
+                            e.get("type") == "skill" and e.get("id") == sid
+                            for e in episode["events"]
+                        )
+                        for episode in episodes
+                        if episode["task"]["id"]
+                        in {r["episode"] for r in proposal["evidence"]}
+                    ):
+                        raise ValueError("Skill merge lacks executed source evidence")
+                    for binding in implementations(bank.skills[sid]):
+                        pid = binding["program_id"]
+                        program = candidate.programs.get(pid) or next(
+                            p
+                            for p in candidate.programs.values()
+                            if executable_equal(bank.programs[pid], p)
+                        )
+                        qualification.extend(
+                            self._regression(program, pid, episodes, suite)
+                        )
+                elif merge["kind"] == "programs":
+                    qualification.extend(
+                        self._regression(
+                            candidate.programs[merge["target_id"]], sid, episodes, suite
+                        )
+                    )
+                else:
+                    if not any(
+                        e.get("id") == sid and e.get("type") == "skeleton_output"
+                        for episode in episodes
+                        for e in episode["events"]
+                    ):
+                        raise ValueError(
+                            "Skeleton merge lacks executed source evidence"
+                        )
         return candidate, {
             "decision": "proposed",
             "before": bank.hash,
             "after": candidate.hash,
             "evidence": proposal["evidence"],
             "qualification": qualification,
+            "alignment": alignment,
         }
+
+    def _regression(self, program, source_id, episodes, suite):
+        cases = []
+        for episode in episodes:
+            for i, event in enumerate(episode["events"]):
+                if (
+                    event.get("type") != "program"
+                    or event.get("id") != source_id
+                    or event.get("result", {}).get("status") != "ok"
+                ):
+                    continue
+                if "tool_event_start" not in event:
+                    raise ValueError("Source replay lacks an exact execution boundary")
+                start = event["tool_event_start"]
+                cases.append(
+                    self._trial(
+                        program,
+                        {
+                            "episode": episode["task"]["id"],
+                            "inputs": event["arguments"],
+                            "prefix": [
+                                j
+                                for j in range(start)
+                                if episode["events"][j]["type"] == "tool"
+                            ],
+                            "expected_from": {
+                                "event": i,
+                                "path": ["result", "outputs"],
+                            },
+                        },
+                        episodes,
+                        suite,
+                    )
+                )
+        if not cases:
+            raise ValueError("Replacement/merge lacks observed source Program cases")
+        return cases
 
     @staticmethod
     def _tools(suite, episodes):
@@ -211,7 +320,18 @@ class Learner:
                         "Only executed native calls can form a replay prefix"
                     )
                 ctx.call(step["name"], step["arguments"])
-            result = self.worker.execute(program, trial["inputs"], ctx)
+            from .runtime import Runtime
+
+            Runtime._preflight(program, trial["inputs"], ctx)
+            if program.get("format") == "ir":
+                from .ir import execute
+
+                result = execute(program, trial["inputs"], ctx)
+            else:
+                if self.worker is None:
+                    raise ValueError("Replay requires an isolated worker")
+                result = self.worker.execute(program, trial["inputs"], ctx)
+            Runtime._effects(program, trial["inputs"], result, ctx)
             if result["status"] != "ok" or result["outputs"] != expected:
                 raise ValueError("Program replay differs from observed training output")
             return {

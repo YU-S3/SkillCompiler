@@ -129,7 +129,14 @@ class Pipeline:
         )
         manifest["runtime"] = {
             k: getattr(self.runtime, k, None)
-            for k in ("max_steps", "max_tool_calls", "retrieval_limit")
+            for k in (
+                "max_steps",
+                "max_tool_calls",
+                "retrieval_limit",
+                "allow_programmer",
+                "max_programs_per_task",
+                "programmer_repair_limit",
+            )
         }
         manifest["learning"] = {
             k: getattr(self.learner, k, None) for k in ("max_proposals", "repair_limit")
@@ -148,7 +155,7 @@ class Pipeline:
             )
             all_episodes.extend(episodes)
             bank = self._checkpoint(
-                path, bank, episodes, "learning/" + str(batch), batch > 0
+                path, bank, all_episodes, "learning/" + str(batch), batch > 0
             )
             checkpoints.append(bank.clone())
         for iteration in range(self.refinement_rounds):
