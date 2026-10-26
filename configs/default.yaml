@@ -1,0 +1,32 @@
+adapter:
+  factory: examples.key_value:Suite
+  parameters: {}
+model:
+  base_url: https://api.example.com/v1
+  model: your-model
+  api_key_env: MODEL_API_KEY
+  max_tokens: 4096
+  timeout: 300
+  max_attempts: 3
+  json_mode: true
+  parameters: {}
+budget:
+  token_limit: 1000000
+  request_limit: 200
+training:
+  seed: 42
+  batch_size: 8
+  refinement_rounds: 1
+  min_gain: 0.0
+runtime:
+  max_steps: 32
+  max_tool_calls: 64
+  retrieval_limit: 8
+learning:
+  max_proposals: 8
+  repair_limit: 1
+# Set worker.image to a locally available immutable image digest to enable Programs.
+# worker:
+#   image: python@sha256:REPLACE_WITH_YOUR_IMAGE_DIGEST
+#   timeout: 60
+#   memory_mb: 1024

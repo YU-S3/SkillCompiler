@@ -1,0 +1,1337 @@
+{
+  "skills": [
+    {
+      "guidance": "For two categories sharing one total: (first-second)/total. A decimal answer keeps that fraction; percent multiplies by 100 once. Do not confuse this with relative growth over the second category.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_01",
+      "name": "share_difference",
+      "program_ids": []
+    },
+    {
+      "guidance": "A decimal ratio is the fraction, not the percentage number: 25%=0.25. Preserve the unrounded fraction; round only after the requested scale is fixed.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_02",
+      "name": "decimal_scale",
+      "program_ids": []
+    },
+    {
+      "guidance": "Fit only the specified observations with an intercept; keep the target actual outside the fit. Use all required months. A polynomial of degree d needs at least d+1 distinct x values.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_03",
+      "name": "polynomial_fit",
+      "program_ids": []
+    },
+    {
+      "guidance": "Subtract matching categories and units: signed change is new minus old; absolute difference takes abs only when requested.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_04",
+      "name": "difference_value",
+      "program_ids": []
+    },
+    {
+      "guidance": "Keep months in order and years in separate groups. Compute each full rolling window, then pooled max minus min across the requested groups. Do not report a min-to-max interval.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_05",
+      "name": "rolling_range",
+      "program_ids": []
+    },
+    {
+      "guidance": "CAGR=(end/start)^(1/elapsed_years)-1. Count intervals, not rows. Percent per year means multiply by 100 once and follow the requested final display; do not round endpoints.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_06",
+      "name": "compound_growth",
+      "program_ids": []
+    },
+    {
+      "guidance": "Continuous relative change is ln(end/start). Divide by elapsed years only for an annualized rate; otherwise use one interval. It is not an absolute currency difference.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_07",
+      "name": "annual_log",
+      "program_ids": []
+    },
+    {
+      "guidance": "Average absolute deviation from a benchmark is mean(abs(value-benchmark)); retain all requested dates. Percentage-point inputs stay at that magnitude; a unit of measure need not be a suffix.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_08",
+      "name": "absolute_deviation",
+      "program_ids": []
+    },
+    {
+      "guidance": "For all stated years use population divisor n. Use n-1 only for an explicitly requested sample estimate. Do not change the convention after computing.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_09",
+      "name": "dispersion",
+      "program_ids": []
+    },
+    {
+      "guidance": "Fit the requested years only, in the stated t coordinates. Keep forecast_x and its actual value outside fitting periods. Preserve the requested forecast-minus-actual sign.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_10",
+      "name": "regression_coordinates",
+      "program_ids": []
+    },
+    {
+      "guidance": "Pair both observed series by the same period and adjustment basis. Do not fill a missing external series from memory. A correlation needs both actual series.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_11",
+      "name": "paired_series",
+      "program_ids": []
+    },
+    {
+      "guidance": "Use exactly the requested periods and category for a mean. Preserve blank columns; exclude adjacent totals, duplicated months and forecast observations.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_12",
+      "name": "series_scope",
+      "program_ids": []
+    },
+    {
+      "guidance": "Apply the requested logarithm first, sort, remove floor(n*proportion) values per tail, then average the retained values. Take the total column, not a financing component.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_13",
+      "name": "log_trim",
+      "program_ids": []
+    },
+    {
+      "guidance": "Compute the median of the complete selected series, then average absolute distances from that median. Verify revisions before fixing the series.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_14",
+      "name": "median_deviation",
+      "program_ids": []
+    },
+    {
+      "guidance": "For positive observations, Theil T is mean((x/mean(x))*ln(x/mean(x))). Round the computed result normally; do not truncate to fit an expected-looking value.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_15",
+      "name": "theil",
+      "program_ids": []
+    },
+    {
+      "guidance": "Honor an explicit as-of release. Otherwise compare already supplied same-definition historical revisions before binding the value. Once all required periods and headers are verified, compute; do not expand to every bulletin merely because years repeat.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_16",
+      "name": "revision_basis",
+      "program_ids": []
+    },
+    {
+      "guidance": "A total may be in the continued panel; do not substitute its largest component. Reporting in dollars does not restrict a category to dollar-denominated assets.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_17",
+      "name": "total_scope",
+      "program_ids": []
+    },
+    {
+      "guidance": "Count blank cells as columns. Read the full year/category header above a repeated month. Bind the exact row in that group, not the first matching month elsewhere.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_18",
+      "name": "table_groups",
+      "program_ids": []
+    },
+    {
+      "guidance": "Arc or symmetric percentage change uses (new-old)/((old+new)/2), not (new-old)/old. Take abs only if requested; convert the fraction to percent only when requested, multiplying by 100 once. This endpoint change is not annualized and does not divide by the number of years. If an elasticity specifies a second changing quantity, divide by that quantity's midpoint change. Compute with unrounded operands and format only at submission.",
+      "applicability": {
+        "when": "arc (?:percent|percentage)|arc elasticity.*midpoint percentage|mid[ -]?point.normalized|symmetric.*(?:change|difference)"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_19",
+      "name": "arc_change",
+      "program_ids": []
+    },
+    {
+      "guidance": "An absolute percent difference between two amounts uses abs(b-a)/((a+b)/2)*100 when no reference baseline is specified. A percent change relative to a named baseline instead divides by that baseline. Do not substitute one formula for the other. Keep source units equal, calculate at full precision, then round and submit only the requested result.",
+      "applicability": {
+        "when": "absolute percent(?:age)? difference"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_20",
+      "name": "percent_difference",
+      "program_ids": []
+    },
+    {
+      "guidance": "When MAD is defined as median absolute deviation, first m=median(values), then MAD=median(abs(x-m)). It is not mean(abs(x-m)). Keep the exact requested observation periods, units and revisions; calculate any subsequent difference against the named benchmark only after MAD is computed.",
+      "applicability": {
+        "when": "median absolute deviation|MAD.*median"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_21",
+      "name": "median_absolute_deviation",
+      "program_ids": []
+    },
+    {
+      "guidance": "Bind each value to table title, row label, full column header, unit and period. End extraction at the next table heading. Never scan a fixed character chunk across tables or let another same-year row overwrite an annual total. Separate annual, monthly, fiscal-to-date and estimate rows. Where receipts/outlays are present, check total surplus=total receipts-total outlays before fitting.",
+      "applicability": {
+        "when": "polynomial|surplus|deficit|Treasury TAB|Ownership Survey"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_22",
+      "name": "table_block_binding",
+      "program_ids": []
+    },
+    {
+      "guidance": "For levels x[0..n], form consecutive g[i]=ln(x[i+1]/x[i]); CV=population_std(g)/mean(g) when population is requested. Compute both series at full precision, then abs(CV1-CV2); round once. Use Python for the complete operation, especially when mean growth is near zero. Failed execution supplies no computed value.",
+      "applicability": {
+        "when": "coefficient of variation.*log growth|growth-based Debt Sustainability"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_23",
+      "name": "log_growth_cv",
+      "program_ids": []
+    },
+    {
+      "guidance": "Build explicit (year,month,series1,series2) records from the table's year groups. Require exactly one record for every requested month before computing spread=series1-series2. Use Python for mean or argmax over all records; do not average a convenient panel or estimate from visual peaks. Keep the winning year/month with argmax, then apply any requested encoding arithmetically.",
+      "applicability": {
+        "when": "yield spread|across the months|each month.*average"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_24",
+      "name": "complete_monthly_series",
+      "program_ids": []
+    },
+    {
+      "guidance": "After finding the requested month and year, compute the stated arithmetic expression explicitly. For month*100+year, do that addition; do not concatenate YYYYMM or use year*100+month. Submit the calculated integer only.",
+      "applicability": {
+        "when": "month.*multiply.*100|month.*multiplied.*100"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_25",
+      "name": "month_encoding",
+      "program_ids": []
+    },
+    {
+      "guidance": "The question's named categories are the counting units. Combine life and fire/casualty insurance into insurance companies, and general plus pension funds into state/local governments when those are the named parent categories. Sum all in-scope instrument rows per category before applying the threshold. Do not count total outstanding or all-other-investors as a requested category.",
+      "applicability": {
+        "when": "categories.*(?:Treasury|securities)|Ownership Survey"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_26",
+      "name": "category_aggregation",
+      "program_ids": []
+    },
+    {
+      "guidance": "FFO-1 fact card: receipts, outlays and surplus/deficit each have total/on-budget/off-budget columns. Annual fiscal-year rows and later fiscal-to-date/monthly rows can repeat the same year. Select the total surplus/deficit of the annual row, inside FFO-1; retain its header and row evidence. A repeated year later in the page is not automatically a revised annual value.",
+      "applicability": {
+        "when": "surplus|deficit|polynomial",
+        "source_pattern": "FFO-1"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_27",
+      "name": "ffo_public_layout",
+      "program_ids": []
+    },
+    {
+      "guidance": "AY-1 fact card: monthly rows repeat Jan-Dec in stacked year bands and horizontal groups of Treasury/Aa-corporate/municipal columns. OCR may omit the year labels. Verify group years using visible labels and dated weekly overlap; the partially populated last band is not a complete earlier year. Keep blank cells and footnote markers from shifting numeric columns.",
+      "applicability": {
+        "when": "yield spread|Corporate Aa|corporate Aa",
+        "source_pattern": "Aa new corporate bonds"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_28",
+      "name": "ay1_public_layout",
+      "program_ids": []
+    },
+    {
+      "guidance": "Choose the requested answer fields and their scale before calculating. Submit only those fields, without explanation or alternative formulas. Preserve a successfully computed final answer; do not replace it with an intermediate operand at finalization. An explicit output template controls suffixes, list order and decimal width. Do not append unrequested units or recompute a correct result in prose.",
+      "applicability": {
+        "when": "."
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_29",
+      "name": "answer_only",
+      "program_ids": [
+        "program_01"
+      ]
+    },
+    {
+      "guidance": "Midpoint normalization divides the endpoint difference by the endpoint mean. The monetary units cancel: a question mentioning source dollars does not turn this ratio back into a dollar difference. Use absolute difference if requested or when asking for a difference between unordered endpoints. Keep fraction scale unless a percent is explicitly requested. Use midpoint_submit after binding the two same-definition values; submit its normalized result, not the raw difference or its percent variant.",
+      "applicability": {
+        "when": "mid[ -]?point.normalized difference"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_30",
+      "name": "normalized_midpoint",
+      "program_ids": [
+        "program_02"
+      ]
+    },
+    {
+      "guidance": "For the requested endpoint growth summary, use CAGR=(end/start)^(1/elapsed_years)-1, annual factor=1+CAGR, and midpoint change=(end-start)/((end+start)/2). When arc elasticity is explicitly defined here as midpoint percentage change and no second economic quantity is given, do not invent a denominator from calendar years or elapsed-time indices. Use growth_submit to compute and submit the three fields in decimal form.",
+      "applicability": {
+        "when": "CAGR.*(?:decay factor|arc elasticity)|compound annual.*(?:decay factor|arc elasticity)"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_31",
+      "name": "endpoint_growth",
+      "program_ids": [
+        "program_03"
+      ]
+    },
+    {
+      "guidance": "Create one ordered period list and align every series to exactly that list. Reuse the same mask for every requested statistic; a correlation must not silently expand to every month in the page. For vessels, distinguish number of vessels from net registered tonnage and arrivals from clearances. For growth CV, use consecutive log ratios of the selected levels. paired_statistics validates aligned periods and computes from the declared series; it cannot correct a wrongly selected column.",
+      "applicability": {
+        "when": "correlat|coefficient of variation.*log growth|growth-based Debt Sustainability"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_32",
+      "name": "paired_period_scope",
+      "program_ids": [
+        "program_04"
+      ]
+    },
+    {
+      "guidance": "For a new observation compared with a baseline estimated from prior observations, use the baseline sample standard deviation (n-1), unless the question explicitly supplies or requests population spread. First derive the monthly increases from consecutive cumulative levels. Exclude the target from the baseline. Compute z=(target-baseline_mean)/baseline_sd, then apply the stated one-sided or absolute threshold. baseline_z makes the denominator and test direction explicit.",
+      "applicability": {
+        "when": "z.score.*(?:relative to|monthly increases)|statistically unusual.*z.level"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_33",
+      "name": "estimated_baseline_z",
+      "program_ids": [
+        "program_05"
+      ]
+    },
+    {
+      "guidance": "Read each table's printed unit before fitting. Convert each series separately to the requested unit: thousands to billions divides by 1,000,000; millions to billions divides by 1,000. Similar-looking old and new tables can use different units. Keep a (period, raw_value, source_unit, converted_value) ledger; check endpoint orders of magnitude before fitting. Do not silently use the same divisor for both sources.",
+      "applicability": {
+        "when": "regression|linear trend|polynomial"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_34",
+      "name": "unit_conversion_before_fit",
+      "program_ids": []
+    },
+    {
+      "guidance": "Debt-holder table fact: total outstanding, government-account holdings, and public holdings are distinct columns; each may also split public debt and guaranteed securities. Bind the full parent and child header. A series near total outstanding is not government-account holdings. Where categories exhaust the same definition, check government accounts + public = total before calculating growth.",
+      "applicability": {
+        "when": "held by.*government.*held by.*public|growth-based Debt Sustainability",
+        "source_pattern": "Government accounts|government accounts"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_35",
+      "name": "debt_holder_columns",
+      "program_ids": []
+    },
+    {
+      "guidance": "TAB means tax anticipation bills, not all Treasury bills or all marketable securities. Filter instrument rows to tax anticipation issues before summing holdings. Then merge subcolumns into the question's named investor categories (life/fire insurance; general/pension state-local funds), apply the threshold per category per requested year, and sum those counts. Do not count the total-outstanding column as an investor category.",
+      "applicability": {
+        "when": "Treasury TAB|tax.anticipation"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_36",
+      "name": "tax_anticipation_scope",
+      "program_ids": []
+    },
+    {
+      "guidance": "When the supplied public pages contain the required rows, extract them and run the calculation now. Search only for a named missing period, header or measure. Return a compact computed object with the chosen formula, aligned operands, units and one final answer; avoid producing many alternative answers and asking the finalizer to choose. A missing value stays missing. Use a compatible linked Program when ready; otherwise use one bounded temporary Python calculation.",
+      "applicability": {
+        "when": "mid[ -]?point|arc elasticity|correlat|z.score|coefficient of variation|polynomial"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "id": "skill_37",
+      "name": "source_first_compute",
+      "program_ids": []
+    }
+  ],
+  "programs": [
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "submit_answer": {
+            "const": true
+          },
+          "value_ref": {
+            "type": "object",
+            "properties": {
+              "result_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "result_id",
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          "source_scale": {
+            "enum": [
+              "quantity",
+              "fraction",
+              "percent",
+              "percentage_points"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "format": {
+            "type": "object",
+            "properties": {
+              "output_scale": {
+                "enum": [
+                  "quantity",
+                  "fraction",
+                  "percent",
+                  "percentage_points"
+                ]
+              },
+              "style": {
+                "enum": [
+                  "number",
+                  "percent",
+                  "unit_suffix"
+                ]
+              },
+              "decimals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 18
+              },
+              "suffix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fixed_decimals": {
+                "type": "boolean",
+                "description": "True only when an exact fixed-width decimal format is requested; default false removes redundant fractional zeros after rounding."
+              }
+            },
+            "required": [
+              "output_scale",
+              "style",
+              "decimals"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "submit_answer",
+          "value_ref",
+          "source_scale",
+          "unit",
+          "format"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "format": {
+            "type": "object"
+          },
+          "source_scale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "proof_scope": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "answer",
+          "value",
+          "format",
+          "source_scale",
+          "unit",
+          "evidence",
+          "proof_scope"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [
+        "read_result"
+      ],
+      "entry_constraints": {
+        "selector": "acquired_numeric_leaf",
+        "description": "Caller explicitly declares source and output scales",
+        "proof_scope": "numeric_conversion_and_display_only"
+      },
+      "result_role": "final_answer",
+      "id": "program_01",
+      "name": "Submit an acquired final scalar with explicit scale and requested display",
+      "format": "python",
+      "source_file": "programs/program_01.py"
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "midpoint_submit"
+            ]
+          },
+          "submit_answer": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decimals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "fixed_decimals": {
+            "type": "boolean"
+          },
+          "operand_refs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "absolute": {
+            "type": "boolean"
+          },
+          "output_percent": {
+            "type": "boolean"
+          },
+          "percent_suffix": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operation",
+          "submit_answer",
+          "values",
+          "unit",
+          "decimals",
+          "absolute",
+          "output_percent"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "calculation": {
+            "type": "object"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "proof_scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "value",
+          "calculation",
+          "evidence",
+          "proof_scope"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [],
+      "entry_constraints": {
+        "description": "Caller binds actual source operands and explicit units; this calculator validates arithmetic, not source semantics."
+      },
+      "result_role": "final_answer",
+      "id": "program_02",
+      "name": "Submit a dimensionless midpoint-normalized difference; explicit operands, validated formula, direct final submission",
+      "format": "python",
+      "source_file": "programs/program_02.py"
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "growth_submit"
+            ]
+          },
+          "submit_answer": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decimals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "fixed_decimals": {
+            "type": "boolean"
+          },
+          "operand_refs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "intervals": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "operation",
+          "submit_answer",
+          "values",
+          "unit",
+          "decimals",
+          "intervals"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "calculation": {
+            "type": "object"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "proof_scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "value",
+          "calculation",
+          "evidence",
+          "proof_scope"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [],
+      "entry_constraints": {
+        "description": "Caller binds actual source operands and explicit units; this calculator validates arithmetic, not source semantics."
+      },
+      "result_role": "final_answer",
+      "id": "program_03",
+      "name": "Keep CAGR, growth factor and endpoint midpoint change distinct; explicit operands, validated formula, direct final submission",
+      "format": "python",
+      "source_file": "programs/program_03.py"
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "paired_statistics"
+            ]
+          },
+          "submit_answer": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 240
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decimals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "fixed_decimals": {
+            "type": "boolean"
+          },
+          "operand_refs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "other_values": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 240
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 240
+          },
+          "expected_periods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 240
+          },
+          "statistic": {
+            "type": "string",
+            "enum": [
+              "share_and_correlation",
+              "absolute_log_growth_cv_difference"
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "submit_answer",
+          "values",
+          "unit",
+          "decimals",
+          "other_values",
+          "periods",
+          "expected_periods",
+          "statistic"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "calculation": {
+            "type": "object"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "proof_scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "value",
+          "calculation",
+          "evidence",
+          "proof_scope"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [],
+      "entry_constraints": {
+        "description": "Caller binds actual source operands and explicit units; this calculator validates arithmetic, not source semantics."
+      },
+      "result_role": "final_answer",
+      "id": "program_04",
+      "name": "Use one period mask and one measure for all paired statistics; explicit operands, validated formula, direct final submission",
+      "format": "python",
+      "source_file": "programs/program_04.py"
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "baseline_z"
+            ]
+          },
+          "submit_answer": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 240
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decimals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "fixed_decimals": {
+            "type": "boolean"
+          },
+          "operand_refs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "spread": {
+            "type": "string",
+            "enum": [
+              "sample",
+              "population"
+            ]
+          },
+          "target": {
+            "type": "number"
+          },
+          "threshold": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "two_sided": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operation",
+          "submit_answer",
+          "values",
+          "unit",
+          "decimals",
+          "spread",
+          "target",
+          "threshold",
+          "two_sided"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "calculation": {
+            "type": "object"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "proof_scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "value",
+          "calculation",
+          "evidence",
+          "proof_scope"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [],
+      "entry_constraints": {
+        "description": "Caller binds actual source operands and explicit units; this calculator validates arithmetic, not source semantics."
+      },
+      "result_role": "final_answer",
+      "id": "program_05",
+      "name": "Use the estimated baseline spread for a new observation; explicit operands, validated formula, direct final submission",
+      "format": "python",
+      "source_file": "programs/program_05.py"
+    }
+  ],
+  "skeletons": []
+}

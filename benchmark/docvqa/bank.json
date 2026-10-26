@@ -1,0 +1,164 @@
+{
+  "skills": [
+    {
+      "guidance": "# DocVQA Skill\n\n## Visual Evidence Discipline\n- Read the document carefully before answering.\n- Prefer the smallest exact text span that answers the question.\n- When several nearby strings look similar, choose the one whose surrounding labels or layout best match the question.\n\n## Exact Answer Discipline\n- Copy names, numbers, and dates exactly from the document whenever possible.\n- Prefer direct extraction over paraphrase.\n- Before finalizing, compare the answer against nearby alternatives and keep the best-supported exact span.\n",
+      "id": "skill_01",
+      "name": "Document evidence",
+      "program_ids": [
+        "program_01"
+      ]
+    },
+    {
+      "guidance": "For phone or fax, pass the exact visible number to answer_step, including parentheses, hyphens and spaces. Never pre-format it; only the Program applies its declared formatting.",
+      "id": "skill_02",
+      "name": "phone",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(phone|telephone|fax)\\b"
+      }
+    },
+    {
+      "guidance": "Copy the reported count with its comparison or range: more than, fewer than, about, and endpoints change the answer. Preserve written number words. Submit this span as count; the Program only removes an N= label, not a bound.",
+      "id": "skill_03",
+      "name": "count",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\bhow many\\b|\\btotal number of\\b"
+      }
+    },
+    {
+      "guidance": "Match a curve by its shape across the entire plotted range, not one straight segment. Dashed lines can be data series too. Follow the matching line to its own label or legend; return that series name.",
+      "id": "skill_04",
+      "name": "curve",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(curve|straight line)\\b"
+      }
+    },
+    {
+      "guidance": "Restrict rows to the requested group. Select the requested measure and unit before comparing: a rate or participation level is different from a population or raw count. Compare that same column across eligible rows; copy only the requested winning label, including its exact spelling.",
+      "id": "skill_05",
+      "name": "comparison",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(highest|lowest|greatest|least|maximum|minimum|higher|lower|greater|most)\\b"
+      }
+    },
+    {
+      "guidance": "Copy the filled amount and its currency words. Stop before a preprinted component that has only a blank or dash and no value, including its connector. A written zero is a filled value. Do not complete an empty currency slot.",
+      "id": "skill_06",
+      "name": "amount_slots",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "^\\s*how much\\b.*\\b(money|paid|received)\\b"
+      }
+    },
+    {
+      "guidance": "For a transaction description, use the person's name to locate the row, then copy only the description cell. Names, relationships, dates and amounts in neighboring columns are separate fields, not extra parts of the description.",
+      "id": "skill_07",
+      "name": "description",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(describe|transaction)\\b"
+      }
+    },
+    {
+      "guidance": "Return the complete category phrase, including its head noun when printed, without a grammatical introductory article. Keep modifiers that distinguish the category. Use neighboring wording to locate it, not to expand the answer into a sentence.",
+      "id": "skill_08",
+      "name": "category",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(type|kind|diet)\\b"
+      }
+    },
+    {
+      "guidance": "Return the requested entity name alone. Exclude introductory at/to/from and a grammatical the outside the name; preserve articles within an official name. Neighboring roles, departments, addresses and years locate the entity but are separate fields. Copy its full name, not the whole line or sentence.",
+      "id": "skill_09",
+      "name": "entity",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(where|who|whos|whom|institution|university|association|company|organization|supplier)\\b"
+      }
+    },
+    {
+      "guidance": "Transcribe the selected name or lettering as printed, not in conventional edited form. Do not add an abbreviation's usual period or a space inside visibly joined lettering. Preserve punctuation that is actually present.",
+      "id": "skill_10",
+      "name": "literal",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(written|spelled|spelling)\\b|^\\s*(who|whom)\\b.*\\b(highest|lowest|greatest|least|maximum|minimum)\\b"
+      }
+    },
+    {
+      "guidance": "For a named field, use neighboring text to locate it, then separate fields by their labels and layout. Return the complete requested field rather than the whole row or sentence. Keep internal name words; adjacent dates, catalogue codes and explanations belong to separate fields.",
+      "id": "skill_11",
+      "name": "boundary",
+      "program_ids": [],
+      "applicability": {
+        "public_pattern": "\\b(where|who|whom|institution|association|company|organization|title|job|role|position|schedule|room)\\b"
+      }
+    }
+  ],
+  "programs": [
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "phone",
+              "page",
+              "count"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "kind",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "original": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "phone",
+              "page",
+              "count"
+            ]
+          },
+          "format_applied": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "answer",
+          "original",
+          "kind",
+          "format_applied"
+        ],
+        "additionalProperties": false
+      },
+      "allowed_tools": [],
+      "result_role": "final_answer",
+      "id": "program_01",
+      "name": "Submit an explicitly typed value",
+      "format": "python",
+      "source_file": "programs/program_01.py"
+    }
+  ],
+  "skeletons": []
+}

@@ -1,0 +1,3393 @@
+{
+  "skills": [
+    {
+      "id": "skill_01",
+      "name": "inspect location",
+      "guidance": "Use the caller-supplied location.\nNavigate when required, open only when authorized, then inspect the location.\nReturn the declared location after the inspection effect is verified.\nReturns the inspected location; public catalog/evidence contains observations. Does not claim a sought object was found.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "preconditions": [],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "location",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "evidence",
+          "predicate": "object.observed"
+        }
+      ],
+      "program_ids": [
+        "program_01"
+      ]
+    },
+    {
+      "id": "skill_02",
+      "name": "find object in scope",
+      "guidance": "Search only the supplied ordered location scope.\nUse the current public affordances to identify a matching takeable object and its source.\nReturn the matched object and source without taking it.\nOnly publicly takeable matching objects are returned. Exhausted scope fails without a fabricated object.\nNo dynamic exclusion-list support. Supply an exact eligible target when exclusions matter.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "locations",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "preconditions": [],
+      "effects": [
+        {
+          "args": {
+            "entity": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "source",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "evidence",
+          "predicate": "entity.discovered_at"
+        }
+      ],
+      "program_ids": [
+        "program_02"
+      ]
+    },
+    {
+      "id": "skill_03",
+      "name": "acquire known object",
+      "guidance": "Use the supplied concrete object and source.\nNavigate and perform authorized opening when needed, then take that same object.\nReturn the verified holding result without selecting a different object.\nConcrete object and its known source are caller supplied. An already-satisfied Atomic is handled by the existing runtime effect check.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "preconditions": [],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "program_ids": [
+        "program_03"
+      ]
+    },
+    {
+      "id": "skill_04",
+      "name": "search and acquire",
+      "guidance": "Search only the caller-authorized ordered scope.\nSelect a publicly takeable object matching the supplied target and take it.\nReturn the concrete held object and the unchanged opening authorization.\nOnly publicly takeable matching objects are returned. Exhausted scope fails without a fabricated object.\nNo dynamic exclusion-list support. Supply an exact eligible target when exclusions matter.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "locations",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "preconditions": [],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "program_ids": [
+        "program_04"
+      ]
+    },
+    {
+      "id": "skill_05",
+      "name": "deliver held object",
+      "guidance": "Use the held object and the supplied destination.\nNavigate and perform authorized opening when needed, then place the same object.\nReturn the declared placement result.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "destination",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "destination",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "preconditions": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "effects": [
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ],
+      "program_ids": [
+        "program_05"
+      ]
+    },
+    {
+      "id": "skill_06",
+      "name": "clean held object",
+      "guidance": "Use the held object and supplied cleaning station.\nReach the station and perform the available cleaning operation.\nReturn the same object with the verified cleaning result.\nUses the Harness macro primitive, not appliance substeps or timers. Stops on terminal interrupt.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "preconditions": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cleaned"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "program_ids": [
+        "program_06"
+      ]
+    },
+    {
+      "id": "skill_07",
+      "name": "heat held object",
+      "guidance": "Use the held object and supplied heating station.\nReach the station and perform the available heating operation.\nReturn the same object with the verified heating result.\nUses the Harness macro primitive, not appliance substeps or timers. Stops on terminal interrupt.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "preconditions": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.heated"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "program_ids": [
+        "program_07"
+      ]
+    },
+    {
+      "id": "skill_08",
+      "name": "cool held object",
+      "guidance": "Use the held object and supplied cooling station.\nReach the station and perform the available cooling operation.\nReturn the same object with the verified cooling result.\nUses the Harness macro primitive, not appliance substeps or timers. Stops on terminal interrupt.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "preconditions": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cooled"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "program_ids": [
+        "program_08"
+      ]
+    },
+    {
+      "id": "skill_09",
+      "name": "observe held object with light",
+      "guidance": "Use the held object, light and light location supplied by the caller.\nReach the location and perform the supported light operation when the goal is not already satisfied.\nReturn the verified observation result for that object and light.\nLight and its location are explicitly grounded by the caller. No trailing action after a terminal observation.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "light": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "light",
+          "location"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "light": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "light"
+        ],
+        "type": "object"
+      },
+      "preconditions": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "effects": [
+        {
+          "args": {
+            "light": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "light",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.observed_with"
+        }
+      ],
+      "program_ids": [
+        "program_09"
+      ]
+    }
+  ],
+  "programs": [
+    {
+      "id": "program_01",
+      "name": "inspect location",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "location",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "location"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "location"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "condition": {
+                "field": "allow_open",
+                "op": "equals",
+                "source": "tool_input",
+                "value": true
+              },
+              "else_branch": [],
+              "node_id": "open_if_authorized",
+              "op": "IF",
+              "then_branch": [
+                {
+                  "condition": {
+                    "match": {
+                      "distinct": true,
+                      "project": {
+                        "kind": "argument",
+                        "role": "object"
+                      },
+                      "source": "action_catalog",
+                      "where": {
+                        "action_type": "OPEN",
+                        "argument_role": "object",
+                        "semantic_compatible_with": {
+                          "field": "location",
+                          "semantic_type": "entity",
+                          "source": "tool_input"
+                        }
+                      }
+                    },
+                    "op": "exists"
+                  },
+                  "else_branch": [],
+                  "node_id": "open_if_available",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "action_type": "OPEN",
+                      "argument_mapping": {
+                        "object": {
+                          "kind": "skill_input",
+                          "source_role": "location"
+                        }
+                      },
+                      "expected_effects": [
+                        {
+                          "args": {
+                            "container": {
+                              "kind": "skill_input",
+                              "source_role": "location"
+                            }
+                          },
+                          "effect_domain": "world",
+                          "predicate": "container.open"
+                        }
+                      ],
+                      "node_id": "open",
+                      "op": "ACTION"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "action_type": "EXAMINE",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "location"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "location"
+                    }
+                  },
+                  "effect_domain": "evidence",
+                  "predicate": "object.observed"
+                }
+              ],
+              "node_id": "inspect",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "allow_open": {
+                  "field": "allow_open",
+                  "source": "tool_input"
+                },
+                "location": {
+                  "field": "location",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "location",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "location",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "evidence",
+          "predicate": "object.observed"
+        }
+      ],
+      "allowed_tools": [
+        "EXAMINE",
+        "GO_TO",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "program_02",
+      "name": "find object in scope",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "locations",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "body": [
+            {
+              "condition": {
+                "match": {
+                  "distinct": true,
+                  "project": {
+                    "kind": "argument",
+                    "role": "destination"
+                  },
+                  "source": "action_catalog",
+                  "where": {
+                    "action_type": "GO_TO",
+                    "argument_role": "destination",
+                    "semantic_compatible_with": {
+                      "field": "location",
+                      "semantic_type": "entity",
+                      "source": "local_variable"
+                    }
+                  }
+                },
+                "op": "exists"
+              },
+              "else_branch": [],
+              "node_id": "go_when_available",
+              "op": "IF",
+              "then_branch": [
+                {
+                  "action_type": "GO_TO",
+                  "argument_mapping": {
+                    "destination": {
+                      "kind": "local_variable",
+                      "source_role": "location"
+                    }
+                  },
+                  "expected_effects": [
+                    {
+                      "args": {
+                        "location": {
+                          "kind": "local_variable",
+                          "source_role": "location"
+                        }
+                      },
+                      "effect_domain": "world",
+                      "predicate": "agent.at_location"
+                    }
+                  ],
+                  "node_id": "go",
+                  "op": "ACTION"
+                }
+              ]
+            },
+            {
+              "body": [
+                {
+                  "condition": {
+                    "field": "allow_open",
+                    "op": "equals",
+                    "source": "tool_input",
+                    "value": true
+                  },
+                  "else_branch": [],
+                  "node_id": "open_if_authorized",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "condition": {
+                        "match": {
+                          "distinct": true,
+                          "project": {
+                            "kind": "argument",
+                            "role": "object"
+                          },
+                          "source": "action_catalog",
+                          "where": {
+                            "action_type": "OPEN",
+                            "argument_role": "object",
+                            "semantic_compatible_with": {
+                              "field": "location",
+                              "semantic_type": "entity",
+                              "source": "local_variable"
+                            }
+                          }
+                        },
+                        "op": "exists"
+                      },
+                      "else_branch": [],
+                      "node_id": "open_if_available",
+                      "op": "IF",
+                      "then_branch": [
+                        {
+                          "action_type": "OPEN",
+                          "argument_mapping": {
+                            "object": {
+                              "kind": "local_variable",
+                              "source_role": "location"
+                            }
+                          },
+                          "expected_effects": [
+                            {
+                              "args": {
+                                "container": {
+                                  "kind": "local_variable",
+                                  "source_role": "location"
+                                }
+                              },
+                              "effect_domain": "world",
+                              "predicate": "container.open"
+                            }
+                          ],
+                          "node_id": "open",
+                          "op": "ACTION"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "match": {
+                      "distinct": true,
+                      "project": {
+                        "kind": "argument",
+                        "role": "object"
+                      },
+                      "source": "action_catalog",
+                      "where": {
+                        "action_type": "TAKE",
+                        "argument_role": "object",
+                        "semantic_compatible_with": {
+                          "field": "target",
+                          "semantic_type": "entity",
+                          "source": "tool_input"
+                        }
+                      }
+                    },
+                    "op": "exists"
+                  },
+                  "else_branch": [],
+                  "node_id": "if_found",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "body": [
+                        {
+                          "node_id": "return_found",
+                          "op": "RETURN",
+                          "output_sources": {
+                            "allow_open": {
+                              "field": "allow_open",
+                              "source": "tool_input"
+                            },
+                            "object": {
+                              "field": "found",
+                              "source": "local_variable"
+                            },
+                            "source": {
+                              "field": "location",
+                              "source": "local_variable"
+                            }
+                          }
+                        }
+                      ],
+                      "collection_source": {
+                        "distinct": true,
+                        "project": {
+                          "kind": "argument",
+                          "role": "object"
+                        },
+                        "source": "action_catalog",
+                        "where": {
+                          "action_type": "TAKE",
+                          "argument_role": "object",
+                          "semantic_compatible_with": {
+                            "field": "target",
+                            "semantic_type": "entity",
+                            "source": "tool_input"
+                          }
+                        }
+                      },
+                      "iteration_variable": "found",
+                      "max_iterations": 1,
+                      "node_id": "select_found",
+                      "op": "FOR_EACH"
+                    }
+                  ]
+                }
+              ],
+              "collection_source": {
+                "distinct": true,
+                "project": {
+                  "kind": "argument",
+                  "role": "location"
+                },
+                "source": "semantic_evidence",
+                "where": {
+                  "argument_role": "location",
+                  "predicate": "agent.at_location",
+                  "semantic_compatible_with": {
+                    "field": "location",
+                    "semantic_type": "entity",
+                    "source": "local_variable"
+                  }
+                }
+              },
+              "iteration_variable": "confirmed_arrival",
+              "max_iterations": 1,
+              "node_id": "go_confirmed_arrival",
+              "op": "FOR_EACH"
+            }
+          ],
+          "collection_source": {
+            "field": "locations",
+            "source": "tool_input"
+          },
+          "iteration_variable": "location",
+          "max_iterations": 8,
+          "node_id": "search_locations",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "entity": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "source",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "evidence",
+          "predicate": "entity.discovered_at"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "program_03",
+      "name": "acquire known object",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "source",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "source",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "source"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "source"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "condition": {
+                "field": "allow_open",
+                "op": "equals",
+                "source": "tool_input",
+                "value": true
+              },
+              "else_branch": [],
+              "node_id": "open_if_authorized",
+              "op": "IF",
+              "then_branch": [
+                {
+                  "condition": {
+                    "match": {
+                      "distinct": true,
+                      "project": {
+                        "kind": "argument",
+                        "role": "object"
+                      },
+                      "source": "action_catalog",
+                      "where": {
+                        "action_type": "OPEN",
+                        "argument_role": "object",
+                        "semantic_compatible_with": {
+                          "field": "source",
+                          "semantic_type": "entity",
+                          "source": "tool_input"
+                        }
+                      }
+                    },
+                    "op": "exists"
+                  },
+                  "else_branch": [],
+                  "node_id": "open_if_available",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "action_type": "OPEN",
+                      "argument_mapping": {
+                        "object": {
+                          "kind": "skill_input",
+                          "source_role": "source"
+                        }
+                      },
+                      "expected_effects": [
+                        {
+                          "args": {
+                            "container": {
+                              "kind": "skill_input",
+                              "source_role": "source"
+                            }
+                          },
+                          "effect_domain": "world",
+                          "predicate": "container.open"
+                        }
+                      ],
+                      "node_id": "open",
+                      "op": "ACTION"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "action_type": "TAKE",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "object"
+                },
+                "source": {
+                  "kind": "skill_input",
+                  "source_role": "source"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.holds"
+                }
+              ],
+              "node_id": "take",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "allow_open": {
+                  "field": "allow_open",
+                  "source": "tool_input"
+                },
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                },
+                "source": {
+                  "field": "source",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "source",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "OPEN",
+        "TAKE"
+      ]
+    },
+    {
+      "id": "program_04",
+      "name": "search and acquire",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "locations",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "body": [
+            {
+              "condition": {
+                "match": {
+                  "distinct": true,
+                  "project": {
+                    "kind": "argument",
+                    "role": "destination"
+                  },
+                  "source": "action_catalog",
+                  "where": {
+                    "action_type": "GO_TO",
+                    "argument_role": "destination",
+                    "semantic_compatible_with": {
+                      "field": "location",
+                      "semantic_type": "entity",
+                      "source": "local_variable"
+                    }
+                  }
+                },
+                "op": "exists"
+              },
+              "else_branch": [],
+              "node_id": "go_when_available",
+              "op": "IF",
+              "then_branch": [
+                {
+                  "action_type": "GO_TO",
+                  "argument_mapping": {
+                    "destination": {
+                      "kind": "local_variable",
+                      "source_role": "location"
+                    }
+                  },
+                  "expected_effects": [
+                    {
+                      "args": {
+                        "location": {
+                          "kind": "local_variable",
+                          "source_role": "location"
+                        }
+                      },
+                      "effect_domain": "world",
+                      "predicate": "agent.at_location"
+                    }
+                  ],
+                  "node_id": "go",
+                  "op": "ACTION"
+                }
+              ]
+            },
+            {
+              "body": [
+                {
+                  "condition": {
+                    "field": "allow_open",
+                    "op": "equals",
+                    "source": "tool_input",
+                    "value": true
+                  },
+                  "else_branch": [],
+                  "node_id": "open_if_authorized",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "condition": {
+                        "match": {
+                          "distinct": true,
+                          "project": {
+                            "kind": "argument",
+                            "role": "object"
+                          },
+                          "source": "action_catalog",
+                          "where": {
+                            "action_type": "OPEN",
+                            "argument_role": "object",
+                            "semantic_compatible_with": {
+                              "field": "location",
+                              "semantic_type": "entity",
+                              "source": "local_variable"
+                            }
+                          }
+                        },
+                        "op": "exists"
+                      },
+                      "else_branch": [],
+                      "node_id": "open_if_available",
+                      "op": "IF",
+                      "then_branch": [
+                        {
+                          "action_type": "OPEN",
+                          "argument_mapping": {
+                            "object": {
+                              "kind": "local_variable",
+                              "source_role": "location"
+                            }
+                          },
+                          "expected_effects": [
+                            {
+                              "args": {
+                                "container": {
+                                  "kind": "local_variable",
+                                  "source_role": "location"
+                                }
+                              },
+                              "effect_domain": "world",
+                              "predicate": "container.open"
+                            }
+                          ],
+                          "node_id": "open",
+                          "op": "ACTION"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "match": {
+                      "distinct": true,
+                      "project": {
+                        "kind": "argument",
+                        "role": "object"
+                      },
+                      "source": "action_catalog",
+                      "where": {
+                        "action_type": "TAKE",
+                        "argument_role": "object",
+                        "semantic_compatible_with": {
+                          "field": "target",
+                          "semantic_type": "entity",
+                          "source": "tool_input"
+                        }
+                      }
+                    },
+                    "op": "exists"
+                  },
+                  "else_branch": [],
+                  "node_id": "if_found",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "body": [
+                        {
+                          "action_type": "TAKE",
+                          "argument_mapping": {
+                            "object": {
+                              "kind": "local_variable",
+                              "source_role": "found"
+                            },
+                            "source": {
+                              "kind": "local_variable",
+                              "source_role": "location"
+                            }
+                          },
+                          "expected_effects": [
+                            {
+                              "args": {
+                                "object": {
+                                  "kind": "local_variable",
+                                  "source_role": "found"
+                                }
+                              },
+                              "effect_domain": "world",
+                              "predicate": "agent.holds"
+                            }
+                          ],
+                          "node_id": "take_found",
+                          "op": "ACTION"
+                        },
+                        {
+                          "node_id": "return_found",
+                          "op": "RETURN",
+                          "output_sources": {
+                            "allow_open": {
+                              "field": "allow_open",
+                              "source": "tool_input"
+                            },
+                            "object": {
+                              "field": "found",
+                              "source": "local_variable"
+                            }
+                          }
+                        }
+                      ],
+                      "collection_source": {
+                        "distinct": true,
+                        "project": {
+                          "kind": "argument",
+                          "role": "object"
+                        },
+                        "source": "action_catalog",
+                        "where": {
+                          "action_type": "TAKE",
+                          "argument_role": "object",
+                          "semantic_compatible_with": {
+                            "field": "target",
+                            "semantic_type": "entity",
+                            "source": "tool_input"
+                          }
+                        }
+                      },
+                      "iteration_variable": "found",
+                      "max_iterations": 1,
+                      "node_id": "select_found",
+                      "op": "FOR_EACH"
+                    }
+                  ]
+                }
+              ],
+              "collection_source": {
+                "distinct": true,
+                "project": {
+                  "kind": "argument",
+                  "role": "location"
+                },
+                "source": "semantic_evidence",
+                "where": {
+                  "argument_role": "location",
+                  "predicate": "agent.at_location",
+                  "semantic_compatible_with": {
+                    "field": "location",
+                    "semantic_type": "entity",
+                    "source": "local_variable"
+                  }
+                }
+              },
+              "iteration_variable": "confirmed_arrival",
+              "max_iterations": 1,
+              "node_id": "go_confirmed_arrival",
+              "op": "FOR_EACH"
+            }
+          ],
+          "collection_source": {
+            "field": "locations",
+            "source": "tool_input"
+          },
+          "iteration_variable": "location",
+          "max_iterations": 8,
+          "node_id": "search_locations",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "OPEN",
+        "TAKE"
+      ]
+    },
+    {
+      "id": "program_05",
+      "name": "deliver held object",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "destination",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_open": {
+            "type": "boolean"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "destination",
+          "allow_open"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "destination",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "destination"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "destination"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "condition": {
+                "field": "allow_open",
+                "op": "equals",
+                "source": "tool_input",
+                "value": true
+              },
+              "else_branch": [],
+              "node_id": "open_if_authorized",
+              "op": "IF",
+              "then_branch": [
+                {
+                  "condition": {
+                    "match": {
+                      "distinct": true,
+                      "project": {
+                        "kind": "argument",
+                        "role": "object"
+                      },
+                      "source": "action_catalog",
+                      "where": {
+                        "action_type": "OPEN",
+                        "argument_role": "object",
+                        "semantic_compatible_with": {
+                          "field": "destination",
+                          "semantic_type": "entity",
+                          "source": "tool_input"
+                        }
+                      }
+                    },
+                    "op": "exists"
+                  },
+                  "else_branch": [],
+                  "node_id": "open_if_available",
+                  "op": "IF",
+                  "then_branch": [
+                    {
+                      "action_type": "OPEN",
+                      "argument_mapping": {
+                        "object": {
+                          "kind": "skill_input",
+                          "source_role": "destination"
+                        }
+                      },
+                      "expected_effects": [
+                        {
+                          "args": {
+                            "container": {
+                              "kind": "skill_input",
+                              "source_role": "destination"
+                            }
+                          },
+                          "effect_domain": "world",
+                          "predicate": "container.open"
+                        }
+                      ],
+                      "node_id": "open",
+                      "op": "ACTION"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "action_type": "MOVE",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "destination"
+                },
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "object"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "destination"
+                    },
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "object.at_location"
+                }
+              ],
+              "node_id": "place",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "allow_open": {
+                  "field": "allow_open",
+                  "source": "tool_input"
+                },
+                "destination": {
+                  "field": "destination",
+                  "source": "tool_input"
+                },
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "destination",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "MOVE",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "program_06",
+      "name": "clean held object",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "station",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "station"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "action_type": "CLEAN",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "object"
+                },
+                "station": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "object.cleaned"
+                }
+              ],
+              "node_id": "process",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                },
+                "station": {
+                  "field": "station",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "station",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cleaned"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "allowed_tools": [
+        "CLEAN",
+        "GO_TO"
+      ]
+    },
+    {
+      "id": "program_07",
+      "name": "heat held object",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "station",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "station"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "action_type": "HEAT",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "object"
+                },
+                "station": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "object.heated"
+                }
+              ],
+              "node_id": "process",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                },
+                "station": {
+                  "field": "station",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "station",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.heated"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "HEAT"
+      ]
+    },
+    {
+      "id": "program_08",
+      "name": "cool held object",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "station": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "station"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "station",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "station"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "action_type": "COOL",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "object"
+                },
+                "station": {
+                  "kind": "skill_input",
+                  "source_role": "station"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "object.cooled"
+                }
+              ],
+              "node_id": "process",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                },
+                "station": {
+                  "field": "station",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "station",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cooled"
+        },
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "agent.holds"
+        }
+      ],
+      "allowed_tools": [
+        "COOL",
+        "GO_TO"
+      ]
+    },
+    {
+      "id": "program_09",
+      "name": "observe held object with light",
+      "format": "ir",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "light": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "light",
+          "location"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "light": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "light"
+        ],
+        "type": "object"
+      },
+      "instructions": [
+        {
+          "condition": {
+            "match": {
+              "distinct": true,
+              "project": {
+                "kind": "argument",
+                "role": "destination"
+              },
+              "source": "action_catalog",
+              "where": {
+                "action_type": "GO_TO",
+                "argument_role": "destination",
+                "semantic_compatible_with": {
+                  "field": "location",
+                  "semantic_type": "entity",
+                  "source": "tool_input"
+                }
+              }
+            },
+            "op": "exists"
+          },
+          "else_branch": [],
+          "node_id": "go_when_available",
+          "op": "IF",
+          "then_branch": [
+            {
+              "action_type": "GO_TO",
+              "argument_mapping": {
+                "destination": {
+                  "kind": "skill_input",
+                  "source_role": "location"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "location": {
+                      "kind": "skill_input",
+                      "source_role": "location"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "agent.at_location"
+                }
+              ],
+              "node_id": "go",
+              "op": "ACTION"
+            }
+          ]
+        },
+        {
+          "body": [
+            {
+              "action_type": "USE",
+              "argument_mapping": {
+                "object": {
+                  "kind": "skill_input",
+                  "source_role": "light"
+                }
+              },
+              "expected_effects": [
+                {
+                  "args": {
+                    "light": {
+                      "kind": "skill_input",
+                      "source_role": "light"
+                    },
+                    "object": {
+                      "kind": "skill_input",
+                      "source_role": "object"
+                    }
+                  },
+                  "effect_domain": "world",
+                  "predicate": "object.observed_with"
+                }
+              ],
+              "node_id": "use_light",
+              "op": "ACTION"
+            },
+            {
+              "node_id": "return",
+              "op": "RETURN",
+              "output_sources": {
+                "light": {
+                  "field": "light",
+                  "source": "tool_input"
+                },
+                "object": {
+                  "field": "object",
+                  "source": "tool_input"
+                }
+              }
+            }
+          ],
+          "collection_source": {
+            "distinct": true,
+            "project": {
+              "kind": "argument",
+              "role": "location"
+            },
+            "source": "semantic_evidence",
+            "where": {
+              "argument_role": "location",
+              "predicate": "agent.at_location",
+              "semantic_compatible_with": {
+                "field": "location",
+                "semantic_type": "entity",
+                "source": "tool_input"
+              }
+            }
+          },
+          "iteration_variable": "confirmed_arrival",
+          "max_iterations": 1,
+          "node_id": "go_confirmed_arrival",
+          "op": "FOR_EACH"
+        }
+      ],
+      "max_actions": 40,
+      "final_effects": [
+        {
+          "args": {
+            "light": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "light",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.observed_with"
+        }
+      ],
+      "allowed_tools": [
+        "GO_TO",
+        "USE"
+      ]
+    }
+  ],
+  "skeletons": [
+    {
+      "id": "skeleton_01",
+      "name": "Search and acquire, deliver",
+      "nodes": [
+        {
+          "id": "acquire",
+          "skill_id": "skill_04",
+          "args": {
+            "target": {
+              "task": "object"
+            },
+            "locations": {
+              "task": "locations"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "deliver",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "acquire",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_02",
+      "name": "Search and acquire, clean then deliver",
+      "nodes": [
+        {
+          "id": "acquire",
+          "skill_id": "skill_04",
+          "args": {
+            "target": {
+              "task": "object"
+            },
+            "locations": {
+              "task": "locations"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "process",
+          "skill_id": "skill_06",
+          "args": {
+            "object": {
+              "from": "acquire",
+              "field": "object"
+            },
+            "station": {
+              "task": "station"
+            }
+          },
+          "after": [
+            "acquire"
+          ]
+        },
+        {
+          "id": "deliver",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "process",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire",
+            "process"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cleaned"
+        },
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_03",
+      "name": "Search and acquire, heat then deliver",
+      "nodes": [
+        {
+          "id": "acquire",
+          "skill_id": "skill_04",
+          "args": {
+            "target": {
+              "task": "object"
+            },
+            "locations": {
+              "task": "locations"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "process",
+          "skill_id": "skill_07",
+          "args": {
+            "object": {
+              "from": "acquire",
+              "field": "object"
+            },
+            "station": {
+              "task": "station"
+            }
+          },
+          "after": [
+            "acquire"
+          ]
+        },
+        {
+          "id": "deliver",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "process",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire",
+            "process"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.heated"
+        },
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_04",
+      "name": "Search and acquire, cool then deliver",
+      "nodes": [
+        {
+          "id": "acquire",
+          "skill_id": "skill_04",
+          "args": {
+            "target": {
+              "task": "object"
+            },
+            "locations": {
+              "task": "locations"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "process",
+          "skill_id": "skill_08",
+          "args": {
+            "object": {
+              "from": "acquire",
+              "field": "object"
+            },
+            "station": {
+              "task": "station"
+            }
+          },
+          "after": [
+            "acquire"
+          ]
+        },
+        {
+          "id": "deliver",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "process",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire",
+            "process"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.cooled"
+        },
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_05",
+      "name": "Search and acquire, observe with light",
+      "nodes": [
+        {
+          "id": "acquire",
+          "skill_id": "skill_04",
+          "args": {
+            "target": {
+              "task": "object"
+            },
+            "locations": {
+              "task": "locations"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "process",
+          "skill_id": "skill_09",
+          "args": {
+            "object": {
+              "from": "acquire",
+              "field": "object"
+            },
+            "light": {
+              "task": "light_source"
+            },
+            "location": {
+              "task": "location"
+            }
+          },
+          "after": [
+            "acquire"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "light": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "light_source",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 1,
+          "distinct_by": "",
+          "effect_domain": "world",
+          "predicate": "object.observed_with"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_06",
+      "name": "Acquire and deliver two caller-grounded distinct objects serially",
+      "nodes": [
+        {
+          "id": "acquire1",
+          "skill_id": "skill_03",
+          "args": {
+            "object": {
+              "task": "object"
+            },
+            "source": {
+              "task": "source"
+            },
+            "allow_open": {
+              "task": "allow_open"
+            }
+          },
+          "after": []
+        },
+        {
+          "id": "deliver1",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "acquire1",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire1",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire1"
+          ]
+        },
+        {
+          "id": "acquire2",
+          "skill_id": "skill_03",
+          "args": {
+            "object": {
+              "task": "object"
+            },
+            "source": {
+              "task": "source"
+            },
+            "allow_open": {
+              "from": "acquire1",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire1",
+            "deliver1"
+          ]
+        },
+        {
+          "id": "deliver2",
+          "skill_id": "skill_05",
+          "args": {
+            "object": {
+              "from": "acquire2",
+              "field": "object"
+            },
+            "destination": {
+              "task": "destination"
+            },
+            "allow_open": {
+              "from": "acquire1",
+              "field": "allow_open"
+            }
+          },
+          "after": [
+            "acquire1",
+            "acquire2"
+          ]
+        }
+      ],
+      "guidance": "Acquire the authorized object and preserve its concrete identity.\nExecute each declared processing step before delivery or observation.\nPass outputs only along the declared data-flow edges.\nFor repeated work, acquire a distinct object for each iteration and preserve the shared destination.\nMissing scope, station or source inputs remain for the Agent to ground.",
+      "target_effects": [
+        {
+          "args": {
+            "location": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "destination",
+              "source_step": "",
+              "transform_id": ""
+            },
+            "object": {
+              "constant": null,
+              "kind": "skill_input",
+              "source_role": "object",
+              "source_step": "",
+              "transform_id": ""
+            }
+          },
+          "cardinality": 2,
+          "distinct_by": "object",
+          "effect_domain": "world",
+          "predicate": "object.at_location"
+        }
+      ]
+    }
+  ]
+}

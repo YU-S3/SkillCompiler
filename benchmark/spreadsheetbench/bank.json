@@ -1,0 +1,421 @@
+{
+  "skills": [
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string",
+            "description": "Absolute path to the source .xlsx workbook."
+          },
+          "output_file": {
+            "type": "string",
+            "description": "Absolute path where the corrected workbook is written."
+          },
+          "answer_position": {
+            "type": "string",
+            "description": "A1-style cell that currently holds the error, e.g. 'B7'."
+          },
+          "solution_contract": {
+            "type": "string",
+            "description": "Required artifacts, e.g. 'Write solution.py and case1_result.xlsx. solution.py uses INPUT_PATH and OUTPUT_PATH.'"
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file",
+          "answer_position"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Workspace-relative published files, including solution.py and the corrected workbook."
+          },
+          "solution_py": {
+            "type": "string",
+            "description": "Publication name of the emitted runner script (e.g. solution.py)."
+          },
+          "result_workbook": {
+            "type": "string",
+            "description": "Publication name of the corrected workbook (e.g. case1_result.xlsx)."
+          },
+          "repaired_value": {
+            "type": "string",
+            "description": "The formula or literal now stored in the target cell."
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "files",
+          "result_workbook",
+          "solution_py"
+        ]
+      },
+      "entry_constraints": "Input must exist as an .xlsx workbook. answer_position is an A1-style cell reference such as 'B7'. The program reads INPUT_PATH and writes OUTPUT_PATH, and must publish solution.py and the corrected workbook as workspace-relative names. Only the error scope may be altered; unrelated cells, sheets and styles are preserved.",
+      "result_role": "final_files",
+      "id": "skill_01",
+      "name": "Repair an error cell (e.g. #REF!, #DIV/0!, #VALUE!, #N/A) at a caller-specified A1 answer position in an .xlsx workbook, producing a corrected workbook where the target cell is no longer an error plus a reusable openpyxl-based runner script.",
+      "program_ids": [],
+      "guidance": "Repair an error cell (e.g. #REF!, #DIV/0!, #VALUE!, #N/A) at a caller-specified A1 answer position in an .xlsx workbook, producing a corrected workbook where the target cell is no longer an error plus a reusable openpyxl-based runner script."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_path": {
+            "type": "string"
+          },
+          "output_path": {
+            "type": "string"
+          },
+          "source_range": {
+            "type": "string"
+          },
+          "target_range": {
+            "type": "string"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "serpentine",
+              "row_major"
+            ]
+          }
+        },
+        "required": [
+          "input_path",
+          "output_path",
+          "target_range"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "output_path": {
+            "type": "string"
+          },
+          "script_path": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "files",
+          "output_path"
+        ]
+      },
+      "entry_constraints": "Requires openpyxl; INPUT_PATH/OUTPUT_PATH may be injected by the sandbox. The result workbook and the generating script must be published as workspace-relative files (no leading slash, no inputs/ prefix). Row count and column count are derived from target_range; total cells must equal the number of source values.",
+      "result_role": "final_files",
+      "id": "skill_02",
+      "name": "Given an .xlsx whose source values sit in a single column, reshape that column into a rectangular block anchored at a specified start cell (e.g. B2) using the symmetrical/alternating-direction (serpentine) row order that keeps the arrangement visually symmetric, and publish the resulting workbook plus the Python script that produced it.",
+      "program_ids": [],
+      "guidance": "Given an .xlsx whose source values sit in a single column, reshape that column into a rectangular block anchored at a specified start cell (e.g. B2) using the symmetrical/alternating-direction (serpentine) row order that keeps the arrangement visually symmetric, and publish the resulting workbook plus the Python script that produced it."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string"
+          },
+          "output_file": {
+            "type": "string"
+          },
+          "answer_position": {
+            "type": "string"
+          },
+          "solution_contract": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file",
+          "answer_position"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "solution_py": {
+            "type": "string"
+          },
+          "result_xlsx": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "files",
+          "result_xlsx",
+          "solution_py"
+        ]
+      },
+      "entry_constraints": "input_file must exist and be a readable .xlsx; answer_position must be writable cells in the same sheet as the data/flags; the chosen formula must be supported by the evaluation engine (Excel and/or LibreOffice).",
+      "result_role": "final_files",
+      "id": "skill_03",
+      "name": "Given an .xlsx workbook with a data table plus designated input flag cells and answer cells, author and apply an Excel formula that lists the row labels (e.g. customer names) whose flags match a required value, and publish a solution.py and the recalculated result workbook.",
+      "program_ids": [],
+      "guidance": "Given an .xlsx workbook with a data table plus designated input flag cells and answer cells, author and apply an Excel formula that lists the row labels (e.g. customer names) whose flags match a required value, and publish a solution.py and the recalculated result workbook."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string"
+          },
+          "output_file": {
+            "type": "string"
+          },
+          "sheet_name": {
+            "type": "string"
+          },
+          "source_column": {
+            "type": "string",
+            "default": "A"
+          },
+          "target_column": {
+            "type": "string",
+            "default": "C"
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "output_file": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "deleted_files",
+          "files",
+          "output_file"
+        ]
+      },
+      "entry_constraints": "input_file must exist and be a readable .xlsx workbook; the source column must contain an ordered sequence of dates or numbers whose expected step is inferable; source and target columns must be within worksheet bounds.",
+      "result_role": "final_files",
+      "id": "skill_04",
+      "name": "Given a spreadsheet whose source column holds a date (or numeric) sequence, detect the values missing from the expected contiguous sequence and write them into a target column of a result workbook, returning the updated workbook as the deliverable.",
+      "program_ids": [],
+      "guidance": "Given a spreadsheet whose source column holds a date (or numeric) sequence, detect the values missing from the expected contiguous sequence and write them into a target column of a result workbook, returning the updated workbook as the deliverable."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string",
+            "description": "Workbook path containing the main data sheet (name, contact number, mail ID, designation, location) and the empty result sheet."
+          },
+          "output_file": {
+            "type": "string",
+            "description": "Path to write the completed workbook."
+          },
+          "answer_position": {
+            "type": "string",
+            "description": "Target range on the result sheet to fill, e.g. \"'result'!B2:D12\"."
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file",
+          "answer_position"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "deleted_files",
+          "files"
+        ]
+      },
+      "entry_constraints": "The input workbook must exist and contain a main data sheet with name, contact number, mail ID, designation and location fields plus a result sheet holding the given answer range. Program must read INPUT_PATH, write OUTPUT_PATH, emit solution.py, and publish the completed result workbook.",
+      "result_role": "final_files",
+      "id": "skill_05",
+      "name": "Fill a target Excel result sheet by conditionally looking up each person's details from a main data sheet: for records whose designation matches the requested criteria for the given location, write the person's name against their location together with contact details and mail ID; write 'N/A' in the cells when the designation does not match; and left-align all output cells.",
+      "program_ids": [],
+      "guidance": "Fill a target Excel result sheet by conditionally looking up each person's details from a main data sheet: for records whose designation matches the requested criteria for the given location, write the person's name against their location together with contact details and mail ID; write 'N/A' in the cells when the designation does not match; and left-align all output cells."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string"
+          },
+          "output_file": {
+            "type": "string"
+          },
+          "answer_position": {
+            "type": "string"
+          },
+          "solution_contract": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file",
+          "answer_position",
+          "solution_contract"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "deleted_files",
+          "files"
+        ],
+        "additionalProperties": false
+      },
+      "entry_constraints": "Requires Python with openpyxl (or equivalent) to read/write .xlsx. Single source workbook; answer_position is an A1-style range. Numeric parsing must be robust to currency symbols and to both '.' and ',' being present.",
+      "result_role": "final_files",
+      "id": "skill_06",
+      "name": "Given an Excel workbook whose cells hold currency-formatted text strings (symbols/numbers in varying positions and formats), extract the numeric value from each target-cell string, determine the valid decimal sign ('.' vs ',') for that string, and write the parsed numbers into the specified answer range of the output workbook.",
+      "program_ids": [],
+      "guidance": "Given an Excel workbook whose cells hold currency-formatted text strings (symbols/numbers in varying positions and formats), extract the numeric value from each target-cell string, determine the valid decimal sign ('.' vs ',') for that string, and write the parsed numbers into the specified answer range of the output workbook."
+    },
+    {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string"
+          },
+          "output_file": {
+            "type": "string"
+          },
+          "sheet_name": {
+            "type": "string"
+          },
+          "source_range": {
+            "type": "string"
+          },
+          "destination_range": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_file",
+          "output_file"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "output_file": {
+            "type": "string"
+          },
+          "solution_file": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "files",
+          "output_file",
+          "solution_file"
+        ]
+      },
+      "entry_constraints": "input_file must exist and be a readable .xlsx; destination_range must lie within the sheet or the sheet must be extendable; duplicate detection is per-row and exact-value based, preserving first occurrence order.",
+      "result_role": "final_files",
+      "id": "skill_07",
+      "name": "Deduplicate repeated values within each spreadsheet row (not column-wise): read a source range or the used part of a sheet, remove later occurrences of any value already seen in the same row while preserving first-occurrence order, and write the deduplicated row-wise result into a specified destination range of an output workbook.",
+      "program_ids": [],
+      "guidance": "Deduplicate repeated values within each spreadsheet row (not column-wise): read a source range or the used part of a sheet, remove later occurrences of any value already seen in the same row while preserving first-occurrence order, and write the deduplicated row-wise result into a specified destination range of an output workbook."
+    }
+  ],
+  "programs": [],
+  "skeletons": []
+}
