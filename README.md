@@ -93,7 +93,7 @@ Programs cannot execute directly on the host. The worker disables networking, mo
 
 ## Bring an environment
 
-Implement a `TaskSuite` and point `adapter.factory` to `your_module:factory`. The factory returns an object with:
+Implement a `TaskSuite` and point `adapter.factory` to `your_module:factory`, or `path/to/adapter.py:factory` relative to the configuration file. The factory returns an object with:
 
 ```python
 tasks(split)                 # list[Task]; public inputs only

@@ -1,5 +1,7 @@
 import argparse
 import importlib
+import importlib.util
+import sys
 import json
 from pathlib import Path
 import yaml
@@ -39,9 +41,17 @@ def main():
     cfg = yaml.safe_load(Path(args.config).read_text())
     root = Path(args.output)
     module, name = cfg["adapter"]["factory"].split(":", 1)
-    suite = getattr(importlib.import_module(module), name)(
-        **cfg["adapter"].get("parameters", {})
-    )
+    if module.endswith(".py"):
+        path = (Path(args.config).resolve().parent / module).resolve()
+        spec = importlib.util.spec_from_file_location(
+            "skillcompiler_external_adapter", path
+        )
+        loaded = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = loaded
+        spec.loader.exec_module(loaded)
+    else:
+        loaded = importlib.import_module(module)
+    suite = getattr(loaded, name)(**cfg["adapter"].get("parameters", {}))
     with run_lock(root):
         ledger = Ledger(root / "usage.json", **cfg["budget"])
         model = ChatModel(cfg["model"], root / "requests", ledger)

@@ -300,6 +300,50 @@ def test_response_contract_error_has_one_learning_repair():
     assert m.calls == 2 and receipt["decision"] == "rejected"
 
 
+def test_cli_file_adapter_full_flow_and_read_only_evaluation(
+    tmp_path, monkeypatch, capsys
+):
+    import yaml
+    from skillcompiler import cli
+    from examples.offline_demo import DemoModel
+
+    root = Path(__file__).resolve().parents[1]
+    cfg = yaml.safe_load((root / "configs/default.yaml").read_text())
+    cfg["adapter"]["factory"] = str(root / "examples/key_value.py") + ":Suite"
+    config = tmp_path / "config.yaml"
+    config.write_text(yaml.safe_dump(cfg))
+    monkeypatch.setattr(cli, "ChatModel", lambda *a: DemoModel())
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skillcompiler",
+            "run",
+            "--config",
+            str(config),
+            "--output",
+            str(tmp_path / "run"),
+        ],
+    )
+    cli.main()
+    assert read(tmp_path / "run/result.json")["test"]["successes"] == 2
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skillcompiler",
+            "evaluate",
+            "--config",
+            str(config),
+            "--output",
+            str(tmp_path / "evaluation"),
+            "--bank",
+            str(tmp_path / "run/frozen_bank"),
+        ],
+    )
+    cli.main()
+    assert read(tmp_path / "evaluation/result.json")["summary"]["successes"] == 2
+    assert read(tmp_path / "evaluation/result.json")["usage"]["requests"] == 0
+
+
 def test_runtime_invalid_response_preserves_executed_tools():
     from skillcompiler.model import ResponseContractError
 

@@ -1,5 +1,5 @@
 adapter:
-  factory: examples.key_value:Suite
+  factory: ../examples/key_value.py:Suite
   parameters: {}
 model:
   base_url: https://api.example.com/v1
