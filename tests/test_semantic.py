@@ -329,7 +329,9 @@ class BuildModel:
 def test_programmer_in_each_phase_without_persistent_bank_write(phase):
     model, suite, bank = BuildModel(), Suite(), Bank()
     t = suite.tasks(phase)[0]
-    trace = Runtime(model, FakeWorker()).run(t, suite.open(t), bank, phase + "/0")
+    trace = Runtime(model, FakeWorker(), planning_enabled=False).run(
+        t, suite.open(t), bank, phase + "/0"
+    )
     assert trace["answer"] is not None and not bank.programs
     assert trace["bank_hash"] == bank.hash != trace["task_overlay_hash"]
     assert trace["programmer_calls"] == 1
@@ -351,7 +353,9 @@ def test_dynamic_skeleton_can_request_programmer():
         ]
     )
     t, model, suite = Suite().tasks("test")[0], BuildModel(), Suite()
-    result = Runtime(model, FakeWorker()).run(t, suite.open(t), bank, "test/0")
+    result = Runtime(model, FakeWorker(), planning_enabled=False).run(
+        t, suite.open(t), bank, "test/0"
+    )
     assert result["terminal_reason"] == "finished" and result["programmer_calls"] == 1
 
 
@@ -359,13 +363,15 @@ def test_programmer_structural_repair_and_total_limits():
     suite = Suite()
     t = suite.tasks("test")[0]
     m = BuildModel(fail_first=True)
-    trace = Runtime(m, FakeWorker()).run(t, suite.open(t), Bank(), "test/0")
+    trace = Runtime(m, FakeWorker(), planning_enabled=False).run(
+        t, suite.open(t), Bank(), "test/0"
+    )
     assert trace["answer"] is not None
     assert len([k for k, _ in m.calls if k.endswith(("/build", "/repair"))]) == 2
     m = BuildModel(fail_all=True)
-    trace = Runtime(m, FakeWorker(), max_steps=5, max_programs_per_task=1).run(
-        t, suite.open(t), Bank(), "test/0"
-    )
+    trace = Runtime(
+        m, FakeWorker(), max_steps=5, max_programs_per_task=1, planning_enabled=False
+    ).run(t, suite.open(t), Bank(), "test/0")
     assert trace["answer"] is None and trace["programmer_calls"] == 1
     assert len([k for k, _ in m.calls if k.endswith(("/build", "/repair"))]) == 2
 
@@ -376,7 +382,9 @@ def test_provider_failures_propagate_without_becoming_program_repairs(error):
     t = suite.tasks("test")[0]
     m = BuildModel(provider_error=error)
     with pytest.raises(type(error)):
-        Runtime(m, FakeWorker()).run(t, suite.open(t), Bank(), "test/0")
+        Runtime(m, FakeWorker(), planning_enabled=False).run(
+            t, suite.open(t), Bank(), "test/0"
+        )
     assert not any(k.endswith("/repair") for k, _ in m.calls)
 
 
@@ -388,7 +396,7 @@ def test_programmer_disabled_and_missing_worker_never_build():
         {"worker": FakeWorker(), "allow_programmer": False},
     ):
         m = BuildModel()
-        trace = Runtime(m, max_steps=2, **kwargs).run(
+        trace = Runtime(m, max_steps=2, **kwargs, planning_enabled=False).run(
             t, suite.open(t), Bank(), "test/0"
         )
         assert trace["programmer_calls"] == 0 and not any(
@@ -399,7 +407,11 @@ def test_programmer_disabled_and_missing_worker_never_build():
 def test_programmer_full_pipeline_resume_and_trace_artifacts(tmp_path):
     m, suite = BuildModel(), Suite()
     pipeline = Pipeline(
-        suite, Runtime(m, FakeWorker()), Learner(m), tmp_path, refinement_rounds=0
+        suite,
+        Runtime(m, FakeWorker(), planning_enabled=False),
+        Learner(m),
+        tmp_path,
+        refinement_rounds=0,
     )
     result = pipeline.run()
     count = len(m.calls)
@@ -426,7 +438,9 @@ def test_real_docker_test_runtime_programmer(docker_worker, tmp_path):
     suite, model, bank = Suite(), BuildModel(fail_first=True), Bank()
     bank.write(tmp_path / "frozen")
     t = suite.tasks("test")[0]
-    trace = Runtime(model, docker_worker).run(t, suite.open(t), bank, "test/0")
+    trace = Runtime(model, docker_worker, planning_enabled=False).run(
+        t, suite.open(t), bank, "test/0"
+    )
     assert trace["answer"] == 3 and Bank.load(tmp_path / "frozen").hash == bank.hash
     assert sum(e["type"] == "tool" for e in trace["events"]) == 1
     assert (
@@ -446,7 +460,7 @@ def test_real_docker_learning_merge_replays_and_retains_parent(docker_worker):
         skeletons=[skeleton()],
     )
     episodes = []
-    runtime = Runtime(None, docker_worker)
+    runtime = Runtime(None, docker_worker, planning_enabled=False)
     for t in suite.tasks("train"):
         ctx = ToolContext(suite.open(t))
         runtime.program(parent, "p", t.inputs, ctx)
@@ -506,12 +520,14 @@ def test_runtime_preconditions_and_ambiguous_bindings_block_execution():
     p = program()
     p["preconditions"] = [{"predicate": "ready", "args": {}}]
     with pytest.raises(ValueError, match="Preconditions"):
-        Runtime(None, FakeWorker()).program(Bank(programs=[p]), "p", t.inputs, ctx)
+        Runtime(None, FakeWorker(), planning_enabled=False).program(
+            Bank(programs=[p]), "p", t.inputs, ctx
+        )
     assert ctx.calls == 0
     s = skill(pid="p")
     s["program_ids"].append("q")
     with pytest.raises(ValueError, match="Ambiguous"):
-        Runtime(None, FakeWorker()).skill(
+        Runtime(None, FakeWorker(), planning_enabled=False).skill(
             Bank(skills=[s], programs=[program(), program("q")]), "a", t.inputs, ctx
         )
     assert ctx.calls == 0
@@ -559,7 +575,9 @@ def test_real_docker_replay_rejection_retains_original_bank(docker_worker):
     episodes = []
     for t in suite.tasks("train"):
         ctx = ToolContext(suite.open(t))
-        Runtime(None, docker_worker).program(parent, "p", t.inputs, ctx)
+        Runtime(None, docker_worker, planning_enabled=False).program(
+            parent, "p", t.inputs, ctx
+        )
         episodes.append({"task": t.public(), "events": ctx.events})
 
     class M:
@@ -634,7 +652,7 @@ def test_real_transport_programmer_accounting_and_cached_resume(
         tmp_path / "requests",
         ledger,
     )
-    runtime = Runtime(model, docker_worker)
+    runtime = Runtime(model, docker_worker, planning_enabled=False)
     bank = Bank()
     first = runtime.run(task, suite.open(task), bank, "test/0")
     assert first["answer"] == 3 and len(payloads) == 4
@@ -668,7 +686,9 @@ def test_runtime_execution_failure_does_not_repeat_side_effect(docker_worker):
             return super().ask(key, prompt, m, schema)
 
     m = M()
-    trace = Runtime(m, docker_worker).run(t, suite.open(t), Bank(), "test/0")
+    trace = Runtime(m, docker_worker, planning_enabled=False).run(
+        t, suite.open(t), Bank(), "test/0"
+    )
     assert sum(e["type"] == "tool" for e in trace["events"]) == 1
     assert not any(k.endswith("/repair") for k, _ in m.calls)
     assert any(

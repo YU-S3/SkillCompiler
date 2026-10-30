@@ -29,6 +29,7 @@ flowchart LR
 - **Skills** describe applicability, prerequisites, procedure, and stopping conditions.
 - **Programs** implement operations with explicit schemas and public-tool permissions. Python runs in a network-isolated container; declarative programs use bounded control flow.
 - **Skill skeletons** connect operations through ordered dependencies and explicit input/output bindings. Nodes can execute a Program or ask the agent to carry out a textual operation.
+- **Online task analysis** creates a public goal contract and an operation DAG. The Host checks prerequisites, data types, dependency order and complete goal-effect coverage before constructing or reusing a Skeleton. Contract-compatible retrieval produces role-rebinding receipts; unresolved planning falls back to the bounded native agent.
 - **Contract alignment** proves role equivalence from explicit schemas, predicates, effects, cardinality and validators. It returns input/output role maps; names or similar guidance cannot prove identity.
 - **Refinement** stages evidence-backed revisions, implementation replacements and merges, replays affected executable cases, rewires consumers, and commits a new Bank checkpoint only after all checks pass. Both successful and failed training episodes remain available.
 - **Runtime programming** is available during Train, Val and Test. Generated Programs execute in the same isolated worker under the task's native-call and model budgets. Test-time Programs stay in a task-local overlay and never modify the frozen persistent Bank.
@@ -53,6 +54,8 @@ python -m examples.offline_demo --output runs/offline-demo
 
 This example exercises native tools, extraction, validation selection, freezing, testing, and checkpoint reuse with a scripted model. Its scores are fixture behavior, not model evaluation results.
 
+Online contract planning is enabled by default. See [planning and execution](docs/online-planning.md) for the full Task Analyzer → contract retrieval → Skeleton → Programmer/Executor path and its adapter requirements.
+
 ## Train, validate, and test
 
 Copy [`configs/default.yaml`](configs/default.yaml) and set the adapter, model endpoint, model name, and budget. Provide the key through the named environment variable:
@@ -67,7 +70,7 @@ The default endpoint is a placeholder. The model transport expects an OpenAI-com
 The pipeline:
 
 1. Checks split disjointness and records the public input identities. Only the training order is shuffled.
-2. Solves each training batch with the current Bank and records actual tool execution and evaluator feedback.
+2. Analyzes each public task, validates the proposed operation dependencies and goal coverage, retrieves compatible operations, and constructs or reuses a complete Skeleton. It solves each training batch with the current Bank and records actual tool execution and evaluator feedback.
 3. Extracts proposed updates. New persistent Programs must reproduce declared outputs from observed training events in an isolated replay environment. One structural repair is allowed by default. Contract-equivalent operations align to existing roles; explicit merges require independent Train evidence, exact contract proof and source replay for executable implementations.
 4. Applies the configured number of Train-only refinement rounds.
 5. Evaluates unique Bank checkpoints on validation tasks. A candidate must exceed the current score by more than `min_gain`; ties retain the earlier Bank. Validation feedback never enters extraction or refinement.

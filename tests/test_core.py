@@ -48,7 +48,7 @@ def test_pipeline_real_tools_selection_freeze_resume(tmp_path):
     suite = Suite()
     p = Pipeline(
         suite,
-        Runtime(model),
+        Runtime(model, planning_enabled=False),
         Learner(model),
         tmp_path,
         batch_size=1,
@@ -84,7 +84,13 @@ def test_split_isolation(tmp_path):
 
 def test_configuration_identity(tmp_path):
     m = ScriptedModel()
-    p = Pipeline(Suite(), Runtime(m), Learner(m), tmp_path, config_identity="a")
+    p = Pipeline(
+        Suite(),
+        Runtime(m, planning_enabled=False),
+        Learner(m),
+        tmp_path,
+        config_identity="a",
+    )
     p.run()
     p.config_identity = "b"
     with pytest.raises(ValueError, match="identity"):
@@ -186,7 +192,9 @@ def test_dynamic_skeleton_uses_real_calls():
             }
         ]
     )
-    result = Runtime(Model()).run(task, suite.open(task), b, "t")
+    result = Runtime(Model(), planning_enabled=False).run(
+        task, suite.open(task), b, "t"
+    )
     assert result["answer"] == 3
     assert [e["type"] for e in result["events"]] == [
         "tool",
@@ -359,7 +367,9 @@ def test_runtime_invalid_response_preserves_executed_tools():
 
     suite = Suite()
     task = suite.tasks("train")[0]
-    result = Runtime(Model()).run(task, suite.open(task), Bank(), "t")
+    result = Runtime(Model(), planning_enabled=False).run(
+        task, suite.open(task), Bank(), "t"
+    )
     assert result["terminal_reason"] == "response_contract_error"
     assert result["events"][0]["result"] == {"value": 3}
 

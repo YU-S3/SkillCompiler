@@ -7,13 +7,29 @@ from .tools import ToolContext
 from .model import ResponseContractError
 from . import prompts
 from .alignment import integrate
+from .schemas import PREDICATE, TRIAL
 
 PROPOSAL_SCHEMA = {
     "type": "object",
     "properties": {
         "decision": {"enum": ["no_change", "propose"]},
-        "skills": {"type": "array", "items": {"type": "object"}},
-        "programs": {"type": "array", "items": {"type": "object"}},
+        "skills": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "effects": {"type": "array", "items": PREDICATE},
+                    "preconditions": {"type": "array", "items": PREDICATE},
+                },
+            },
+        },
+        "programs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"trials": {"type": "array", "items": TRIAL}},
+            },
+        },
         "skeletons": {"type": "array", "items": {"type": "object"}},
         "remove_ids": {"type": "array", "items": {"type": "string"}},
         "merges": {
@@ -85,19 +101,48 @@ class Learner:
         self.repair_limit = repair_limit
 
     def update(self, bank, episodes, suite, key, refine=False):
+        evidence_catalog = []
+        for episode in episodes:
+            events = []
+            for index, event in enumerate(episode["events"]):
+                paths = []
+                if event["type"] == "tool" and isinstance(event.get("result"), dict):
+                    paths.append(["result"])
+                if event["type"] == "program" and isinstance(
+                    event.get("result", {}).get("outputs"), dict
+                ):
+                    paths.append(["result", "outputs"])
+                if event["type"] == "skeleton_node" and isinstance(
+                    event.get("outputs"), dict
+                ):
+                    paths.append(["outputs"])
+                events.append(
+                    {
+                        "index": index,
+                        "type": event["type"],
+                        "output_object_paths": paths,
+                    }
+                )
+            evidence_catalog.append(
+                {"episode": episode["task"]["id"], "events": events}
+            )
         material = {
             "bank": bank.data(),
             "episodes": episodes,
+            "evidence_catalog": evidence_catalog,
             "asset_contract": {
                 "skill": "id, name, applicability, guidance, input_schema, output_schema, preconditions, effects, validator, program_ids or implementations",
                 "program": "id, name, input_schema, output_schema, allowed_tools, trials",
                 "trial": "episode, inputs, prefix (event indices), expected_from (event index and output path)",
-                "skeleton": "id, name, nodes ordered by after dependencies; node args use task/from/literal references",
+                "skeleton": "id, name, complete goal contract (input_schema, output_schema, preconditions, effects); nodes ordered by after dependencies with operation contract, args using task/from/literal references; outputs bind final roles. Every goal effect must be covered, every prerequisite established by dependencies. Legacy skeletons without a complete contract are not eligible for verified online reuse.",
                 "evidence": "episode ID and exact event indices; all proposed assets must be grounded",
                 "semantic_contract": "Predicates have predicate, args of typed {kind: skill_input|skill_output, source_role}, effect_domain, cardinality, distinct_by. Preserve literals, types, resolution constraints and validator semantics.",
                 "implementation": "program_id; input_map maps Program inputs to Skill inputs; output_map maps Skill outputs to Program outputs",
                 "merge": "merges: kind, source_ids, new target_id. Include replacement asset. Sources must have equivalent contracts, two independent training episodes, and executable source replay. No unqualified removal.",
-                "limits": {"max_assets": self.max_proposals},
+                "limits": {
+                    "max_assets": self.max_proposals,
+                    "program_synthesis_enabled": self.worker is not None,
+                },
             },
         }
         prompt = prompts.REFINER if refine else prompts.EXTRACTOR

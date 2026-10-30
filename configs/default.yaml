@@ -25,6 +25,8 @@ runtime:
   allow_programmer: true
   max_programs_per_task: 2
   programmer_repair_limit: 1
+  planning_enabled: true
+  planning_repair_limit: 1
 learning:
   max_proposals: 8
   repair_limit: 1

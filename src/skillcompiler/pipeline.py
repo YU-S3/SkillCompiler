@@ -136,6 +136,8 @@ class Pipeline:
                 "allow_programmer",
                 "max_programs_per_task",
                 "programmer_repair_limit",
+                "planning_enabled",
+                "planning_repair_limit",
             )
         }
         manifest["learning"] = {

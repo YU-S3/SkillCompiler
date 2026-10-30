@@ -74,7 +74,12 @@ def resolve(value, inputs, outputs):
     if not isinstance(value, dict):
         return value
     if set(value) == {"task"}:
-        return inputs[value["task"]]
+        if value["task"] in inputs:
+            return inputs[value["task"]]
+        result = inputs
+        for part in value["task"].split("."):
+            result = result[int(part)] if isinstance(result, list) else result[part]
+        return result
     if "from" in value:
         result = outputs[value["from"]]
         for part in str(value.get("field", "")).split("."):

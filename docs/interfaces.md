@@ -26,6 +26,8 @@ For semantic contracts, adapters can implement `verify_preconditions(conditions,
 
 ## Qualification
 
+Online analysis can also consume `predicate_contracts()`, an optional list of public predicate descriptions. The Host verifies complete goal coverage and data dependencies before execution; see [online planning](online-planning.md). Predicate role names refer to actual interface properties, `cardinality` is a positive integer, and semantic validators require adapter support. Learning requests include an explicit zero-based evidence catalog with observed output-object paths, so a model need not infer indices from the trace layout.
+
 A proposed Program names replay cases from the current training material. Each case specifies:
 
 ```json

@@ -58,7 +58,12 @@ def rewrite_roles(value, inputs, outputs):
         mapping = inputs if kind.endswith("input") else outputs
         role = value.get("source_role")
         if role not in mapping:
-            raise ValueError("Unknown semantic role reference")
+            raise ValueError(
+                "Unknown semantic role reference: "
+                + str(role)
+                + "; available roles: "
+                + ", ".join(sorted(mapping))
+            )
         result["source_role"] = mapping[role]
     elif "source_role" in value:
         raise ValueError("Unsupported semantic binding kind")
@@ -102,7 +107,44 @@ def contract(asset, inputs=None, outputs=None):
     }
 
 
+def effects_cover(required, offered):
+    """Conservative predicate entailment: identical terms, sufficient cardinality."""
+
+    def fixed(value):
+        return {k: v for k, v in value.items() if k != "cardinality"}
+
+    return all(
+        any(
+            encoded(fixed(need)) == encoded(fixed(have))
+            and have["cardinality"] >= need["cardinality"]
+            for have in offered
+        )
+        for need in required
+    )
+
+
+def _satisfies(required, offered):
+    # Retrieval is directional; merge identity remains strict equality.
+    return (
+        required["input_schema"] == offered["input_schema"]
+        and required["output_schema"] == offered["output_schema"]
+        and effects_cover(offered["preconditions"], required["preconditions"])
+        and effects_cover(required["effects"], offered["effects"])
+        and required["validator"] == offered["validator"]
+        and required["entry_constraints"] == offered["entry_constraints"]
+    )
+
+
+def match_requirement(requirement, candidate, max_states=4096):
+    """Prove role rebinding and coverage, never infer semantics from names."""
+    return _align(requirement, candidate, max_states, directional=True)
+
+
 def align(source, target, max_states=4096):
+    return _align(source, target, max_states, directional=False)
+
+
+def _align(source, target, max_states, directional):
     """Return exact/different/unknown plus independently verifiable role maps."""
     if max_states < 1:
         raise ValueError("Identity search budget must be positive")
@@ -135,7 +177,13 @@ def align(source, target, max_states=4096):
 
         for ins in maps(*groups[0]):
             for outs in maps(*groups[1]):
-                if encoded(contract(source, ins, outs)) == encoded(expected):
+                normalized = contract(source, ins, outs)
+                compatible = (
+                    _satisfies(normalized, expected)
+                    if directional
+                    else encoded(normalized) == encoded(expected)
+                )
+                if compatible:
                     proof = {
                         "input_map": ins,
                         "output_map": outs,
@@ -143,6 +191,8 @@ def align(source, target, max_states=4096):
                         "target_hash": digest(contract(target)),
                         "contract_hash": digest(expected),
                     }
+                    if directional:
+                        proof["relation"] = "candidate_satisfies_requirement"
                     return {"status": "exact", "proof": proof, "states": count}
         return {"status": "different", "reason": "contract mismatch", "states": count}
     except (ValueError, KeyError, TypeError, OverflowError) as exc:

@@ -16,7 +16,7 @@ A semantic Skill declares `input_schema`, `output_schema`, `preconditions`, `eff
 
 The search cap is 4,096 states. Exhaustion, unknown role references and unsupported composed top-level interface schemas return `unknown`, never equivalence. Text-only assets without a semantic effect or validator can still provide guidance but cannot be automatically merged as contract-equivalent operations. This is an explicit contract proof, not a proof that arbitrary prose or Python programs mean the same thing.
 
-Retrieval uses multiset Dice similarity with deterministic ID tie-breaking. An explicitly supplied requirement additionally filters Skills by exact semantic contract. Runtime implementation selection validates actual inputs and preconditions; multiple ready implementations require an explicit choice rather than silently choosing the first.
+Retrieval uses multiset Dice similarity with deterministic ID tie-breaking after directional contract filtering when a requirement is supplied. The default online Planner supplies each analyzed operation's requirement. `match_requirement()` proves a role bijection, equal interface constraints, sufficient candidate effects and no additional unmet prerequisites. Extra effects or greater cardinality may satisfy a requirement; they do not establish merge identity. Validators and entry constraints must match exactly. Direct-agent guidance retrieval remains lexical. Runtime implementation selection validates actual inputs and preconditions; multiple ready implementations require an explicit choice rather than silently choosing the first.
 
 ## Aligning an implementation
 
@@ -28,7 +28,7 @@ New equivalent operations reuse the existing Skill interface. Program code keeps
  "output_map":{"result":"value"}}
 ```
 
-`input_map` maps Program inputs to Skill inputs. `output_map` maps Skill outputs to Program outputs. Legacy `program_ids` use identity mappings. Skeleton argument keys, downstream output references and dynamic-node output schemas are retargeted consistently. Literals and nested output suffixes retain their meaning.
+`input_map` maps Program inputs to Skill inputs. `output_map` maps Skill outputs to Program outputs. Legacy `program_ids` use identity mappings. Skeleton argument keys, downstream output references, node contracts and dynamic-node output schemas are retargeted consistently. Literals and nested output suffixes retain their meaning.
 
 ## The merge path
 

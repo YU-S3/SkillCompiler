@@ -43,6 +43,8 @@ class Runtime:
         allow_programmer=True,
         max_programs_per_task=2,
         programmer_repair_limit=1,
+        planning_enabled=True,
+        planning_repair_limit=1,
     ):
         self.model, self.worker = model, worker
         self.max_steps, self.max_tool_calls, self.retrieval_limit = (
@@ -56,6 +58,11 @@ class Runtime:
         self.max_programs_per_task = max_programs_per_task
         self.programmer_repair_limit = programmer_repair_limit
         self.programmer = Programmer(model, programmer_repair_limit)
+        from .planning import Planner
+
+        self.planning_enabled = planning_enabled
+        self.planning_repair_limit = planning_repair_limit
+        self.planner = Planner(model, retrieval_limit, planning_repair_limit)
 
     @staticmethod
     def _preflight(asset, inputs, ctx):
@@ -268,21 +275,44 @@ class Runtime:
 
     def _execute(self, task, ctx, bank, key):
         retrieved = bank.retrieve(task.instruction, self.retrieval_limit)
+        prepared = (
+            self.planner.prepare(task, ctx, bank, key)
+            if self.planning_enabled
+            else None
+        )
+        if self.planning_enabled:
+            retrieved["skeletons"] = []
+        if prepared:
+            try:
+                self._preflight(prepared[0]["contract"], prepared[1], ctx)
+            except (ValueError, KeyError) as exc:
+                ctx.events.append({"type": "planning_rejected", "error": str(exc)})
+                prepared = None
+        if prepared:
+            skeleton, inputs = prepared
+            bank.skeletons[skeleton["id"]] = skeleton
+            bank.validate()
+            retrieved["skeletons"] = [skeleton]
+            plan = {"skeleton_id": skeleton["id"], "inputs": inputs}
         outputs = {}
         answer = None
         reason = "step_limit"
         steps = 0
         if retrieved["skeletons"]:
-            plan = self.model.ask(
-                key + "/plan",
-                prompts.ANALYZER,
-                {
-                    "task": task.public(),
-                    "observation": ctx.observe(),
-                    "tools": ctx.available_tools(),
-                    "skills": retrieved,
-                },
-                PLAN_SCHEMA,
+            plan = (
+                plan
+                if prepared
+                else self.model.ask(
+                    key + "/plan",
+                    prompts.SKELETON_SELECTOR,
+                    {
+                        "task": task.public(),
+                        "observation": ctx.observe(),
+                        "tools": ctx.available_tools(),
+                        "skills": retrieved,
+                    },
+                    PLAN_SCHEMA,
+                )
             )
             if plan["skeleton_id"]:
                 if plan["skeleton_id"] not in {s["id"] for s in retrieved["skeletons"]}:
@@ -302,6 +332,7 @@ class Runtime:
                             k: resolve(v, skeleton_inputs, outputs)
                             for k, v in node.get("args", {}).items()
                         }
+                        self._preflight(node.get("contract", {}), args, ctx)
                         pid = node.get("program_id")
                         if (
                             not pid
@@ -335,6 +366,16 @@ class Runtime:
                                 "output_schema",
                                 {"type": "object", "required": required_outputs},
                             )
+                            node_step_schema = deepcopy(STEP_SCHEMA)
+                            node_step_schema["properties"]["answer"] = schema
+                            node_step_schema["allOf"] = [
+                                {
+                                    "if": {
+                                        "properties": {"action": {"const": "finish"}}
+                                    },
+                                    "then": {"required": ["answer"]},
+                                }
+                            ]
                             guidance = [
                                 bank.skills[sid]
                                 for sid in node.get("reference_skill_ids", [])
@@ -364,7 +405,7 @@ class Runtime:
                                             for p in bank.programs.values()
                                         ],
                                     },
-                                    STEP_SCHEMA,
+                                    node_step_schema,
                                 )
                                 if decision["action"] == "finish":
                                     validate(decision.get("answer"), schema)
@@ -380,6 +421,12 @@ class Runtime:
                                 steps += 1
                             if node["id"] not in outputs:
                                 break
+                        self._effects(
+                            node.get("contract", {}),
+                            args,
+                            {"status": "ok", "outputs": outputs[node["id"]]},
+                            ctx,
+                        )
                         ctx.events.append(
                             {
                                 "type": "skeleton_node",
@@ -388,6 +435,7 @@ class Runtime:
                             }
                         )
                     except (ValueError, KeyError, TimeoutError) as exc:
+                        outputs.pop(node["id"], None)
                         ctx.events.append(
                             {
                                 "type": "skeleton_error",
@@ -401,13 +449,32 @@ class Runtime:
                         k: resolve(v, skeleton_inputs, outputs)
                         for k, v in skeleton["outputs"].items()
                     }
-                    ctx.events.append(
-                        {
-                            "type": "skeleton_output",
-                            "id": skeleton["id"],
-                            "outputs": final,
-                        }
-                    )
+                    try:
+                        if "contract" in skeleton:
+                            validate(final, skeleton["contract"]["output_schema"])
+                            self._effects(
+                                skeleton["contract"],
+                                skeleton_inputs,
+                                {"status": "ok", "outputs": final},
+                                ctx,
+                            )
+                    except (ValueError, KeyError) as exc:
+                        ctx.events.append(
+                            {
+                                "type": "skeleton_error",
+                                "id": skeleton["id"],
+                                "error": str(exc),
+                            }
+                        )
+                        final = {}
+                    if final:
+                        ctx.events.append(
+                            {
+                                "type": "skeleton_output",
+                                "id": skeleton["id"],
+                                "outputs": final,
+                            }
+                        )
                     if "answer" in final:
                         return {
                             "task": task.public(),

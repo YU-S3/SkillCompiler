@@ -13,6 +13,7 @@ from .semantic import (
     implementation_maps,
     executable_equal,
     role_schema,
+    contract,
 )
 
 
@@ -56,6 +57,10 @@ def _rewire_skeleton(skeleton, substitutions):
             if "output_schema" in node:
                 node["output_schema"] = role_schema(
                     node["output_schema"], proof["output_map"]
+                )
+            if "contract" in node:
+                node["contract"] = contract(
+                    node["contract"], proof["input_map"], proof["output_map"]
                 )
             # An explicit Program remains in its original ABI. Use the aligned
             # Skill binding instead of bypassing the boundary with old args.

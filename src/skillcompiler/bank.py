@@ -129,9 +129,13 @@ class Bank:
                 check_refs(node.get("args", {}))
                 known.add(node["id"])
             check_refs(s.get("outputs", {})) if s["nodes"] else None
+            if "contract" in s:
+                from .planning import skeleton_analysis, validate_analysis
+
+                validate_analysis(skeleton_analysis(s, self))
 
     def retrieve(self, text, limit=8, requirement=None):
-        from .semantic import lexical_similarity, align
+        from .semantic import lexical_similarity, match_requirement
 
         def rank(asset):
             description = " ".join(
@@ -144,7 +148,8 @@ class Bank:
                 (
                     s
                     for s in self.skills.values()
-                    if requirement is None or align(requirement, s)["status"] == "exact"
+                    if requirement is None
+                    or match_requirement(requirement, s)["status"] == "exact"
                 ),
                 key=rank,
             )[:limit],

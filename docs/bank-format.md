@@ -31,6 +31,8 @@ Input bindings are explicit:
 
 ## Declarative Programs
 
+Verified online reuse additionally requires a complete Skeleton `contract` and operation contracts on its nodes (or the referenced assets). Goal coverage and dependency checks run on Bank admission and again with public task inputs. Legacy incomplete Skeletons are not automatically promoted to this representation; see [online planning](online-planning.md).
+
 `format: "ir"` stores `instructions` instead of Python source. Supported operations are `IF`, `FOR_EACH`, `ACTION`, and `RETURN`, with finite loop and action limits. References use declared inputs or local variables. Conditions support existence, equality, conjunction, disjunction, and negation.
 
 Domain semantics belong to the adapter:
@@ -39,7 +41,7 @@ Domain semantics belong to the adapter:
 - `verify_effects(effects, inputs, variables, result)` confirms declared effects from observable state.
 - `condition(spec, inputs, variables)` may handle additional explicit condition types.
 
-The interpreter never guesses domain predicates. A missing verifier or unconfirmed effect rejects execution. Tool permissions and the shared native-call budget apply to every action.
+The interpreter never guesses domain predicates. A missing verifier or unconfirmed effect rejects execution. Tool permissions and the shared native-call budget apply to every action. An `ACTION` may use `result_variable` to store its real tool response for later local references; `RETURN.output_sources` binds those observed values to declared outputs.
 
 ## Freeze and portability
 

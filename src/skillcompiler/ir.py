@@ -90,6 +90,8 @@ def execute(program, inputs, ctx):
                 args = {k: value(v) for k, v in node["argument_mapping"].items()}
                 result = ctx.call(node["action_type"], args)
                 calls += 1
+                if node.get("result_variable"):
+                    local[node["result_variable"]] = deepcopy(result)
                 if node.get("expected_effects"):
                     verifier = getattr(ctx.environment, "verify_effects", None)
                     if verifier is None or not verifier(
