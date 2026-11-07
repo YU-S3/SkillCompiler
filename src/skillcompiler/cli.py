@@ -40,9 +40,15 @@ def main():
         return
     cfg = yaml.safe_load(Path(args.config).read_text())
     root = Path(args.output)
-    module, name = cfg["adapter"]["factory"].split(":", 1)
+    spec_text = cfg["adapter"]["factory"]
+    # Split on the last colon: a module path may itself contain one (C:\...\a.py).
+    module, separator, name = spec_text.rpartition(":")
+    if not separator or not name.isidentifier() or not module:
+        raise ValueError("adapter.factory must be module:object or path/to/file.py:object")
     if module.endswith(".py"):
         path = (Path(args.config).resolve().parent / module).resolve()
+        if not path.is_file():
+            raise ValueError("Adapter file does not exist: " + str(path))
         spec = importlib.util.spec_from_file_location(
             "skillcompiler_external_adapter", path
         )

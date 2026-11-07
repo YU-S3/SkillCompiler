@@ -111,6 +111,7 @@ def execute(program, inputs, ctx):
         ):
             raise ValueError("Final operation effects were not verified")
     return {
+        # An empty RETURN dict is a successful return, not a missing output.
         "status": "ok" if returned is not None else "not_found",
-        "outputs": returned or {},
+        "outputs": returned if returned is not None else {},
     }

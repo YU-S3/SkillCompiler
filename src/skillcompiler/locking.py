@@ -14,8 +14,11 @@ def run_lock(folder):
         if os.name == "nt":
             import msvcrt
 
-            handle.write(b"0")
-            handle.flush()
+            # Byte-range locking needs one byte to exist; grow the file only once.
+            handle.seek(0, os.SEEK_END)
+            if handle.tell() == 0:
+                handle.write(b"0")
+                handle.flush()
             handle.seek(0)
             msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
         else:

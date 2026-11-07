@@ -43,6 +43,8 @@ class Bank:
     @classmethod
     def load(cls, folder):
         folder = Path(folder)
+        if folder.is_file() and folder.name == "bank.json":
+            folder = folder.parent
         data = read(folder / "bank.json")
         for program in data["programs"]:
             if "source_file" in program:
