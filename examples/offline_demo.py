@@ -47,6 +47,9 @@ def lookup_analysis():
                 "contract": lookup_contract(),
                 "args": {"key": {"task": "key"}},
                 "after": [],
+                # Typed, verifiable and tool-grounded: eligible for an implementation.
+                "execution_mode": "programmatic",
+                "allowed_tools": ["lookup"],
             }
         ],
         "outputs": {"answer": {"from": "read", "field": "value"}},

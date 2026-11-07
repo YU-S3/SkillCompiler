@@ -1,4 +1,8 @@
-"""Portable deployment content; run logs and qualification evidence live elsewhere."""
+"""Portable deployment content.
+
+Programs carry compact certificates (hashes binding replay evidence to a body and
+tool interface); full run logs and learning receipts live elsewhere.
+"""
 
 from copy import deepcopy
 from pathlib import Path
@@ -75,6 +79,23 @@ class Bank:
         for s in self.skills.values():
             if not s.get("guidance") or not s.get("name"):
                 raise ValueError("Skill needs name and guidance")
+            if "usage" in s:
+                usage = s["usage"]
+                if (
+                    not isinstance(usage, dict)
+                    or set(usage) != {"attempts", "successes"}
+                    or not all(type(v) is int and v >= 0 for v in usage.values())
+                    or usage["successes"] > usage["attempts"]
+                ):
+                    raise ValueError("Skill usage needs attempt/success counts")
+            if "utility" in s and not (
+                isinstance(s["utility"], (int, float))
+                and not isinstance(s["utility"], bool)
+                and 0 <= s["utility"] <= 1
+            ):
+                raise ValueError("Skill utility must lie in [0, 1]")
+            if "active" in s and not isinstance(s["active"], bool):
+                raise ValueError("Skill active flag must be boolean")
             for p in s.get("program_ids", []):
                 if p not in self.programs:
                     raise ValueError("Dangling Program reference")
@@ -87,6 +108,10 @@ class Bank:
         for p in self.programs.values():
             if not isinstance(p.get("allowed_tools"), list):
                 raise ValueError("Program needs explicit allowed_tools")
+            if "qualification" in p:
+                from .qualification import validate_record
+
+                validate_record(p["qualification"])
             for k in ("input_schema", "output_schema"):
                 from jsonschema import Draft202012Validator
 
@@ -107,6 +132,16 @@ class Bank:
                     raise ValueError("Skeleton is cyclic or unordered")
                 if node.get("skill_id") and node["skill_id"] not in self.skills:
                     raise ValueError("Dangling Skill reference")
+                if node.get("execution_mode", "dynamic") not in {
+                    "dynamic",
+                    "programmatic",
+                }:
+                    raise ValueError("Unknown node execution_mode")
+                if "allowed_tools" in node and not (
+                    isinstance(node["allowed_tools"], list)
+                    and all(isinstance(t, str) and t for t in node["allowed_tools"])
+                ):
+                    raise ValueError("Node allowed_tools must be tool names")
                 if node.get("program_id") and node["program_id"] not in self.programs:
                     raise ValueError("Dangling Program reference")
                 if (
@@ -137,13 +172,23 @@ class Bank:
                 validate_analysis(skeleton_analysis(s, self))
 
     def retrieve(self, text, limit=8, requirement=None):
+        """Eq. 3 for operations after the contract filter; skeletons rank lexically."""
         from .semantic import lexical_similarity, match_requirement
 
-        def rank(asset):
-            description = " ".join(
-                str(asset.get(k, "")) for k in ("name", "guidance", "applicability")
+        def similarity(asset):
+            return lexical_similarity(
+                text,
+                " ".join(
+                    str(asset.get(k, "")) for k in ("name", "guidance", "applicability")
+                ),
             )
-            return (-lexical_similarity(text, description), asset["id"])
+
+        def score(skill):
+            return (
+                similarity(skill)
+                + 0.1 * skill.get("utility", 0.0)
+                + 0.05 * bool(skill.get("active", True))
+            )
 
         return {
             "skills": sorted(
@@ -153,7 +198,9 @@ class Bank:
                     if requirement is None
                     or match_requirement(requirement, s)["status"] == "exact"
                 ),
-                key=rank,
+                key=lambda s: (-score(s), s["id"]),
             )[:limit],
-            "skeletons": sorted(self.skeletons.values(), key=rank)[:limit],
+            "skeletons": sorted(
+                self.skeletons.values(), key=lambda s: (-similarity(s), s["id"])
+            )[:limit],
         }

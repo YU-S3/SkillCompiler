@@ -43,7 +43,9 @@ The Host resolves the expected object from an executed observation, resets the e
 
 Passing replay establishes compatibility with those observations, not general correctness. Held-out validation selects the final Bank. The framework does not automatically confer universal correctness or a permanent success label on a Program.
 
-Runtime can also request a new task-local Program during Train, Val or Test. This path records structural admission and actual bounded execution separately, without inserting the result into a persistent Bank. See [semantic alignment and Runtime programming](semantic-alignment.md) for the complete interface and merge gates.
+Replay results go back to the Programmer. A Program that raises an error or returns a different object gets a repair request (`…/build_<id>/repair_N`). The request carries `previous_source` and `replay_failure`, which holds the inputs, the expected observation, the observed result and the error. Repairs are bounded by `learning.program_repair_limit`. A Program that passes every case, plus any replacement or merge regression, receives a persistent certificate bound to its executable body and tool interfaces (see the [Bank guide](bank-format.md#certificates)). Only certified Programs that are still eligible in the current environment are invoked automatically.
+
+Runtime can also request a new task-local Program during Train, Val or Test. With an isolated instance of the task available, the candidate first runs on a replay of the live tool prefix. A failed check goes back to the Programmer for bounded repair, and only a passing candidate runs live. The result is never inserted into a persistent Bank. See [semantic alignment and Runtime programming](semantic-alignment.md) for the complete interface and merge gates.
 
 ## Model boundary
 

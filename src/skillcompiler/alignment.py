@@ -6,6 +6,7 @@ only executable interfaces and guidance. Failed edits never mutate their parent.
 
 from copy import deepcopy
 from .contracts import digest
+from .qualification import program_digest
 from .semantic import (
     align,
     verify,
@@ -184,6 +185,15 @@ def integrate(bank, additions, merges=(), removals=(), *, refine=False, evidence
                 raise ValueError("Duplicate proposed asset ID")
             seen.add(aid)
             prior = indexes[kind].get(aid)
+            if (
+                kind == "programs"
+                and prior is not None
+                and program_digest(prior) == program_digest(asset)
+            ):
+                # Same executable body: at most a fresh certificate, not a revision.
+                if asset.get("qualification"):
+                    prior["qualification"] = deepcopy(asset["qualification"])
+                continue
             if kind == "programs" and prior is None and aid not in explicit_targets:
                 equivalent = next(
                     (p for p in indexes[kind].values() if executable_equal(asset, p)),

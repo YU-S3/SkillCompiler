@@ -18,18 +18,21 @@ training:
   batch_size: 8
   refinement_rounds: 1
   min_gain: 0.0
+  replan_limit: 1                # re-execute failed training tasks after an update
 runtime:
   max_steps: 32
   max_tool_calls: 64
   retrieval_limit: 8
   allow_programmer: true
   max_programs_per_task: 2
-  programmer_repair_limit: 1
+  programmer_repair_limit: 1     # structural repair of a runtime Program
   planning_enabled: true
   planning_repair_limit: 1
+  validation_repair_limit: 1     # repairs after isolated prefix-replay validation
 learning:
   max_proposals: 8
   repair_limit: 1
+  program_repair_limit: 1        # PROGRAMMER repairs after failed training replay
 # Set worker.image to a locally available immutable image digest to enable Programs.
 # worker:
 #   image: python@sha256:REPLACE_WITH_YOUR_IMAGE_DIGEST

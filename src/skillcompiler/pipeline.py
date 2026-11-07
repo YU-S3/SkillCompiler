@@ -5,6 +5,7 @@ from pathlib import Path
 import random
 from .bank import Bank
 from .contracts import digest, read, save
+from .learning import localize_failure
 
 
 class Pipeline:
@@ -19,10 +20,11 @@ class Pipeline:
         refinement_rounds=1,
         min_gain=0.0,
         config_identity=None,
+        replan_limit=1,
     ):
         self.suite, self.runtime, self.learner = suite, runtime, learner
         self.output = Path(output)
-        if batch_size < 1 or refinement_rounds < 0:
+        if batch_size < 1 or refinement_rounds < 0 or replan_limit not in range(4):
             raise ValueError("Invalid training schedule")
         self.batch_size, self.seed, self.refinement_rounds, self.min_gain = (
             batch_size,
@@ -30,6 +32,7 @@ class Pipeline:
             refinement_rounds,
             min_gain,
         )
+        self.replan_limit = replan_limit
         self.config_identity = config_identity
 
     def _checkpoint(self, path, bank, episodes, key, refine):
@@ -66,7 +69,12 @@ class Pipeline:
                 environment = self.suite.open(task)
                 try:
                     trace = self.runtime.run(
-                        task, environment, bank, phase + "/" + str(index)
+                        task,
+                        environment,
+                        bank,
+                        phase + "/" + str(index),
+                        # A separate instance of the same task for isolated validation.
+                        sandbox=lambda task=task: self.suite.open(task),
                     )
                     feedback = self.suite.score(task, trace["answer"], environment)
                     row = {**trace, "identity": identity, "feedback": asdict(feedback)}
@@ -111,6 +119,7 @@ class Pipeline:
             "batch_size": self.batch_size,
             "refinement_rounds": self.refinement_rounds,
             "min_gain": self.min_gain,
+            "replan_limit": self.replan_limit,
         }
         manifest["configuration"] = self.config_identity
         manifest["source"] = digest(
@@ -138,10 +147,12 @@ class Pipeline:
                 "programmer_repair_limit",
                 "planning_enabled",
                 "planning_repair_limit",
+                "validation_repair_limit",
             )
         }
         manifest["learning"] = {
-            k: getattr(self.learner, k, None) for k in ("max_proposals", "repair_limit")
+            k: getattr(self.learner, k, None)
+            for k in ("max_proposals", "repair_limit", "program_repair_limit")
         }
         if (self.output / "manifest.json").exists() and read(
             self.output / "manifest.json"
@@ -152,14 +163,43 @@ class Pipeline:
         all_episodes = []
         for batch, start in enumerate(range(0, len(train), self.batch_size)):
             path = self.output / "learning" / str(batch)
-            episodes, _ = self._evaluate(
-                train[start : start + self.batch_size], bank, "train/" + str(batch)
-            )
+            tasks = train[start : start + self.batch_size]
+            episodes, _ = self._evaluate(tasks, bank, "train/" + str(batch))
             all_episodes.extend(episodes)
             bank = self._checkpoint(
                 path, bank, all_episodes, "learning/" + str(batch), batch > 0
             )
             checkpoints.append(bank.clone())
+            for attempt in range(self.replan_limit):
+                # Sec. 3.4.2: re-execute failed tasks once the Bank has changed.
+                latest = {e["task"]["id"]: e for e in all_episodes}
+                failed = [
+                    t
+                    for t in tasks
+                    if not latest[t.id]["feedback"]["success"]
+                    and latest[t.id]["bank_hash"] != bank.hash
+                ]
+                if not failed:
+                    break
+                phase = "train/" + str(batch) + "/replan_" + str(attempt)
+                retried, _ = self._evaluate(failed, bank, phase)
+                for row in retried:
+                    previous = latest[row["task"]["id"]]
+                    row["previous_attempt"] = {
+                        "bank_hash": previous["bank_hash"],
+                        "feedback": previous["feedback"],
+                        "terminal_reason": previous.get("terminal_reason"),
+                        "failure_localization": localize_failure(previous),
+                    }
+                    all_episodes[all_episodes.index(previous)] = row
+                bank = self._checkpoint(
+                    path / ("replan_" + str(attempt)),
+                    bank,
+                    all_episodes,
+                    "learning/" + str(batch) + "/replan_" + str(attempt),
+                    True,
+                )
+                checkpoints.append(bank.clone())
         for iteration in range(self.refinement_rounds):
             path = self.output / "refinement" / str(iteration)
             bank = self._checkpoint(

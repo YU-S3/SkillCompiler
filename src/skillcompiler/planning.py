@@ -16,6 +16,13 @@ OP_SCHEMA = {
         "contract": CONTRACT_SCHEMA,
         "args": {"type": "object", "additionalProperties": BINDING},
         "after": {"type": "array", "items": {"type": "string"}, "uniqueItems": True},
+        # Sec. 3.2.2 executability judgement; the Host re-checks it below.
+        "execution_mode": {"enum": ["programmatic", "agent"]},
+        "allowed_tools": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": True,
+        },
     },
     "required": ["id", "intent", "contract", "args", "after"],
     "additionalProperties": False,
@@ -49,6 +56,47 @@ ANALYSIS_SCHEMA = {
         },
     ]
 }
+# The analyzer must state a mode for every operation; stored skeletons may omit it.
+ANALYZER_SCHEMA = deepcopy(ANALYSIS_SCHEMA)
+ANALYZER_SCHEMA["oneOf"][1]["properties"]["operations"]["items"]["required"] = [
+    *OP_SCHEMA["required"],
+    "execution_mode",
+]
+
+
+def executability(operation, tools, predicate_names, environment):
+    """Host check of Sec. 3.2.2 conditions; returns reasons that force agent guidance."""
+    reasons = []
+    item = operation["contract"]
+    for boundary in ("input_schema", "output_schema"):
+        if any(
+            not isinstance(s, dict) or "type" not in s
+            for s in item[boundary]["properties"].values()
+        ):
+            reasons.append("untyped " + boundary + " role")
+    if not item["output_schema"]["properties"]:
+        reasons.append("no explicit output role")
+    used = {p["predicate"] for p in item["preconditions"] + item["effects"]}
+    if used - set(predicate_names):
+        reasons.append(
+            "predicates not verifiable by the adapter: "
+            + ", ".join(sorted(used - set(predicate_names)))
+        )
+    if item["preconditions"] and not hasattr(environment, "verify_preconditions"):
+        reasons.append("preconditions are not observable")
+    if not hasattr(environment, "verify_effects"):
+        reasons.append("effects are not verifiable")
+    if item.get("validator") and not hasattr(environment, "verify_contract"):
+        reasons.append("semantic validator is not supported")
+    requested = operation.get("allowed_tools", [])
+    if not requested:
+        reasons.append("no bounded tool interface")
+    elif set(requested) - {t["name"] for t in tools}:
+        reasons.append(
+            "unknown tools: "
+            + ", ".join(sorted(set(requested) - {t["name"] for t in tools}))
+        )
+    return reasons
 
 
 def _root_schema(value, field):
@@ -180,6 +228,10 @@ def validate_analysis(analysis, public_inputs=None):
     }
 
 
+# Node execution_mode <-> analysis execution_mode.
+MODES = {"dynamic": "agent", "programmatic": "programmatic"}
+
+
 def skeleton_analysis(skeleton, bank):
     if "contract" not in skeleton:
         raise ValueError("Skeleton has no complete task contract")
@@ -211,6 +263,16 @@ def skeleton_analysis(skeleton, bank):
                 "contract": contract(requirement),
                 "args": deepcopy(node.get("args", {})),
                 "after": node.get("after", []),
+                **(
+                    {"execution_mode": MODES[node["execution_mode"]]}
+                    if node.get("execution_mode") in MODES
+                    else {}
+                ),
+                **(
+                    {"allowed_tools": list(node["allowed_tools"])}
+                    if "allowed_tools" in node
+                    else {}
+                ),
             }
         )
     return {
@@ -257,7 +319,7 @@ class Planner:
                             "errors": error,
                         }
                     ),
-                    ANALYSIS_SCHEMA,
+                    ANALYZER_SCHEMA,
                 )
             except ResponseContractError as exc:
                 analysis, error = exc.response, str(exc)
@@ -276,11 +338,30 @@ class Planner:
                 }
             )
             return None
+        modes = {}
+        predicate_names = [
+            p.get("predicate") for p in material["predicate_contracts"]
+        ]
+        for op in analysis.get("operations", []):
+            requested = op.get("execution_mode", "agent")
+            reasons = (
+                executability(op, material["tools"], predicate_names, ctx.environment)
+                if requested == "programmatic"
+                else []
+            )
+            # A failed condition downgrades to agent guidance; never the reverse.
+            modes[op["id"]] = {
+                "operation": op["id"],
+                "requested": requested,
+                "mode": "agent" if reasons or requested == "agent" else requested,
+                "reasons": reasons,
+            }
         ctx.events.append(
             {
                 "type": "task_analysis",
                 "analysis": deepcopy(analysis),
                 "validation": check,
+                "executability": list(modes.values()),
             }
         )
         if analysis["decision"] == "direct":
@@ -342,6 +423,7 @@ class Planner:
                 {
                     "task": task.public(),
                     "analysis": analysis,
+                    "executability": list(modes.values()),
                     "compatible_operations": catalog,
                     "compatible_skeletons": complete,
                 },
@@ -379,7 +461,11 @@ class Planner:
                     alias = "operation_" + op["id"]
                     node["skill_id"] = alias
                     substitutions[alias] = (sid, proofs[(op["id"], sid)])
+                if modes[op["id"]]["mode"] == "programmatic":
+                    node["execution_mode"] = "programmatic"
+                    node["allowed_tools"] = list(op["allowed_tools"])
                 else:
+                    # A chosen Skill only guides an agent-guided operation.
                     node["execution_mode"] = "dynamic"
                 skeleton["nodes"].append(node)
             _rewire_skeleton(skeleton, substitutions)

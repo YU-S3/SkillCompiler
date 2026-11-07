@@ -1,0 +1,39 @@
+# Live end-to-end check against a real OpenAI-compatible endpoint (DeepSeek here).
+# Uses the fabricated two-tool tasks in inventory.py; scores are engineering checks.
+#   export MODEL_API_KEY=...
+#   skillcompiler run --config examples/inventory_live.yaml --output runs/inventory-live
+adapter:
+  factory: inventory.py:Suite
+budget:
+  request_limit: 120
+  token_limit: 900000
+model:
+  api_key_env: MODEL_API_KEY
+  base_url: https://api.deepseek.com
+  json_mode: true
+  max_attempts: 2
+  max_tokens: 4096
+  model: deepseek-v4-flash
+  parameters:
+    thinking:
+      type: disabled
+  timeout: 180
+runtime:
+  allow_programmer: true
+  max_steps: 8
+  max_tool_calls: 16
+  planning_enabled: true
+  validation_repair_limit: 1
+learning:
+  max_proposals: 4
+  repair_limit: 1
+  program_repair_limit: 1
+training:
+  batch_size: 2
+  refinement_rounds: 1
+  replan_limit: 1
+  seed: 42
+worker:
+  # Replace with your own local image digest (see README, "Enable Programs").
+  image: python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159
+  timeout: 30

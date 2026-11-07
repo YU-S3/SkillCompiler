@@ -39,7 +39,7 @@ class Programmer:
             raise ValueError("Runtime structural repair is bounded to one")
         self.model, self.repair_limit = model, repair_limit
 
-    def compile(self, spec, inputs, task, ctx, key):
+    def compile(self, spec, inputs, task, ctx, key, feedback=None):
         validate(spec, OPERATION_SCHEMA)
         validate(inputs, spec["input_schema"])
         tools = {t["name"]: t for t in ctx.available_tools()}
@@ -53,8 +53,11 @@ class Programmer:
             "tools": [tools[k] for k in spec["allowed_tools"]],
             "history": deepcopy(ctx.events),
             "remaining_tool_calls": ctx.remaining_calls(),
-            "scope": "task-local; structural repair only; live execution is not proof of general correctness",
+            "scope": "task-local; validated in an isolated environment instance when available; never admitted to the persistent Bank",
         }
+        if feedback is not None:
+            # Discrepancies from isolated validation of the previous candidate.
+            material["validation_feedback"] = deepcopy(feedback)
         previous, error = None, None
         for attempt in range(self.repair_limit + 1):
             received = False

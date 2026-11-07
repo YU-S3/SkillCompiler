@@ -266,7 +266,8 @@ def implementation_maps(skill, program, binding):
 
 def executable_equal(source, target):
     """No claim of general Python program equivalence: compare executable bodies."""
-    ignored = {"id", "name", "description"}
+    # Certificates are evidence about a body, not part of it.
+    ignored = {"id", "name", "description", "qualification"}
     return encoded({k: v for k, v in source.items() if k not in ignored}) == encoded(
         {k: v for k, v in target.items() if k not in ignored}
     )

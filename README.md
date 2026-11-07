@@ -26,13 +26,13 @@ flowchart LR
     X --> LP[Task-local Programmer]
 ```
 
-- **Skills** describe applicability, prerequisites, procedure, and stopping conditions.
-- **Programs** implement operations with explicit schemas and public-tool permissions. Python runs in a network-isolated container; declarative programs use bounded control flow.
-- **Skill skeletons** connect operations through ordered dependencies and explicit input/output bindings. Nodes can execute a Program or ask the agent to carry out a textual operation.
-- **Online task analysis** creates a public goal contract and an operation DAG. The Host checks prerequisites, data types, dependency order and complete goal-effect coverage before constructing or reusing a Skeleton. Contract-compatible retrieval produces role-rebinding receipts; unresolved planning falls back to the bounded native agent.
+- **Skills** describe applicability, prerequisites, procedure, and stopping conditions. The Host measures each Skill's local success rate (utility) and ranks contract-compatible Skills by similarity plus utility.
+- **Programs** implement operations with explicit schemas and public-tool permissions. Python runs in a network-isolated container; declarative programs use bounded control flow. A Program is invoked automatically only when its inputs bind, its preconditions hold, its tools exist and its validation certificate still matches its body and tool interfaces.
+- **Skill skeletons** connect operations through ordered dependencies and explicit input/output bindings. Each node is `programmatic` (run a certified implementation, else compile and validate one, else fall back to the agent) or `dynamic` (the agent carries out the operation, with a Skill as guidance).
+- **Online task analysis** creates a public goal contract and an operation DAG, with an executability judgement per operation that the Host re-checks. The Host checks prerequisites, data types, dependency order and complete goal-effect coverage before constructing or reusing a Skeleton. Contract-compatible retrieval produces role-rebinding receipts; unresolved planning falls back to the bounded native agent.
 - **Contract alignment** proves role equivalence from explicit schemas, predicates, effects, cardinality and validators. It returns input/output role maps; names or similar guidance cannot prove identity.
-- **Refinement** stages evidence-backed revisions, implementation replacements and merges, replays affected executable cases, rewires consumers, and commits a new Bank checkpoint only after all checks pass. Both successful and failed training episodes remain available.
-- **Runtime programming** is available during Train, Val and Test. Generated Programs execute in the same isolated worker under the task's native-call and model budgets. Test-time Programs stay in a task-local overlay and never modify the frozen persistent Bank.
+- **Refinement** works from localized failures. It stages evidence-backed revisions, implementation replacements and merges, replays affected executable cases with bounded Programmer repair, rewires consumers, and commits a new Bank checkpoint only after all checks pass. Failed training tasks are re-executed with the updated Bank. Both successful and failed training episodes remain available.
+- **Runtime programming** is available during Train, Val and Test. A generated Program is first validated against a replay of the task's tool prefix in a separate environment instance, with bounded repair, and then executes in the same isolated worker under the task's native-call and model budgets. Test-time Programs stay in a task-local overlay and never modify the frozen persistent Bank.
 
 ## Installation
 
@@ -54,6 +54,8 @@ python -m examples.offline_demo --output runs/offline-demo
 
 This example exercises native tools, extraction, validation selection, freezing, testing, and checkpoint reuse with a scripted model. Its scores are fixture behavior, not model evaluation results.
 
+For a live check against a real endpoint, [`examples/inventory_live.yaml`](examples/inventory_live.yaml) runs the full pipeline on fabricated two-tool tasks ([`examples/inventory.py`](examples/inventory.py)) that need a price lookup, a stock lookup and a computed product.
+
 Online contract planning is enabled by default. See [planning and execution](docs/online-planning.md) for the full Task Analyzer → contract retrieval → Skeleton → Programmer/Executor path and its adapter requirements.
 
 ## Train, validate, and test
@@ -71,10 +73,11 @@ The pipeline:
 
 1. Checks split disjointness and records the public input identities. Only the training order is shuffled.
 2. Analyzes each public task, validates the proposed operation dependencies and goal coverage, retrieves compatible operations, and constructs or reuses a complete Skeleton. It solves each training batch with the current Bank and records actual tool execution and evaluator feedback.
-3. Extracts proposed updates. New persistent Programs must reproduce declared outputs from observed training events in an isolated replay environment. One structural repair is allowed by default. Contract-equivalent operations align to existing roles; explicit merges require independent Train evidence, exact contract proof and source replay for executable implementations.
-4. Applies the configured number of Train-only refinement rounds.
-5. Evaluates unique Bank checkpoints on validation tasks. A candidate must exceed the current score by more than `min_gain`; ties retain the earlier Bank. Validation feedback never enters extraction or refinement.
-6. Freezes the selected Bank and evaluates the Test split. The Bank digest must remain unchanged. The agent can call the Programmer for a missing operation; its source, structural admission and live execution result are recorded in that task's trace, without publishing a new persistent asset.
+3. Extracts proposed updates, with the first failing operation of each failed episode localized in the learning material. New persistent Programs must reproduce declared outputs from observed training events in an isolated replay environment. Replay discrepancies go back to the Programmer for bounded repair, and passing Programs receive a certificate. One structural repair of a proposal is allowed by default. Contract-equivalent operations align to existing roles; explicit merges require independent Train evidence, exact contract proof and source replay for executable implementations.
+4. Re-executes the batch's failed training tasks with the updated Bank (`training.replan_limit`) and learns again from the new attempts.
+5. Applies the configured number of Train-only refinement rounds.
+6. Evaluates unique Bank checkpoints on validation tasks. A candidate must exceed the current score by more than `min_gain`; ties retain the earlier Bank. Validation feedback never enters extraction or refinement.
+7. Freezes the selected Bank and evaluates the Test split. The Bank digest must remain unchanged. The agent, or a programmatic node without an eligible implementation, can call the Programmer. Its source, isolated validation, structural admission and live execution result are recorded in that task's trace, without publishing a new persistent asset.
 
 To resume, use the same command, output directory, source, configuration, and inputs. Completed task and learning checkpoints are verified and reused. A changed run identity is rejected. One process may own an output directory at a time.
 
@@ -98,7 +101,7 @@ worker:
 
 Programs cannot execute directly on the host. The worker disables networking, mounts its source read-only, drops capabilities, runs as a non-root user, and enforces time, memory, process, and RPC limits. Install any required libraries in your own image before pinning its digest. Native tool effects remain the adapter's responsibility.
 
-The same worker is used for on-demand Runtime programming in all splits. Configure `runtime.allow_programmer`, `max_programs_per_task` and `programmer_repair_limit` explicitly when changing that policy. See [semantic alignment, merge transactions and task-local programming](docs/semantic-alignment.md) for proofs, role bindings, admission gates and trace records.
+The same worker is used for on-demand Runtime programming in all splits. Configure `runtime.allow_programmer`, `max_programs_per_task`, `programmer_repair_limit` and `validation_repair_limit`, and `learning.program_repair_limit`, explicitly when changing that policy. See [semantic alignment, merge transactions and task-local programming](docs/semantic-alignment.md) for proofs, role bindings, admission gates and trace records.
 
 ## Bring an environment
 
@@ -135,7 +138,7 @@ skillcompiler evaluate --config configs/my-environment.yaml \
   --bank benchmark/alfworld --split test --output runs/evaluation
 ```
 
-These are portable deployment assets, separate from the empty-Bank training example. Using them requires an adapter that implements their declared tools and inputs. The declarative Bank additionally requires the semantic-query and effect-verification interfaces described in the [Bank guide](docs/bank-format.md). This repository does not assert that the refactored runner reproduces historical experiment scores without a new evaluation.
+These are portable deployment assets, separate from the empty-Bank training example. Using them requires an adapter that implements their declared tools and inputs. The declarative Bank additionally requires the semantic-query and effect-verification interfaces described in the [Bank guide](docs/bank-format.md). These Banks carry no validation certificates, because certificates are bound to a concrete tool interface. Their Programs therefore act as reference implementations, with agent-guided execution, until training replay in your environment certifies them. This repository does not assert that the refactored runner reproduces historical experiment scores without a new evaluation.
 
 ## Records and resource accounting
 
@@ -151,7 +154,7 @@ export SKILLCOMPILER_TEST_IMAGE='python@sha256:YOUR_LOCAL_IMAGE_DIGEST'
 pytest -q tests/test_worker.py
 ```
 
-Tests cover split isolation, Train-only learning, strict validation selection, immutable testing, checkpoint identity, native-tool limits, bounded IR execution, request retries and accounting, portable Bank round trips, role-equivalence proofs, transactional merging, consumer rebinding, Test-time programming, actual Docker execution, and source-backed Program qualification. Docker tests are skipped when no image digest is supplied. They are engineering checks, not performance claims.
+Tests cover split isolation, Train-only learning, strict validation selection, immutable testing, checkpoint identity, native-tool limits, bounded IR execution, request retries and accounting, portable Bank round trips, role-equivalence proofs, transactional merging, consumer rebinding, Test-time programming, actual Docker execution, and source-backed Program qualification. `tests/test_mechanisms.py` additionally drives fabricated tasks through utility ranking, certificate and environment gating, executability downgrade, isolated validation with repair, replay repair with certification, failure localization and re-execution. Docker tests are skipped when no image digest is supplied. They are engineering checks, not performance claims.
 
 ## Repository layout
 

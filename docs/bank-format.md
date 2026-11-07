@@ -6,11 +6,34 @@
 
 A Skill has `id`, `name`, `guidance`, and optional applicability, input/output schemas, preconditions, effects, and `program_ids`. Guidance is operational content; provenance and execution receipts belong in the run output, outside a deployment Bank.
 
+The Host also maintains three measured fields on a Skill: `usage` (`{"attempts", "successes"}` of local operation outcomes), `utility` (successes/attempts in [0, 1]) and `active` (false after at least two attempts without a success). They are recomputed from all training episodes after every learning update; values proposed by a model are discarded. Retrieval first applies the contract filter, then ranks Skills by `Dice + 0.1·utility + 0.05·[active]` (Eq. 3). Skeletons are ranked lexically.
+
 A Python Program has `id`, `name`, `format: "python"`, `source_file`, `input_schema`, `output_schema`, and an explicit `allowed_tools` list. Its source defines `run(ctx, inputs)`. Source is loaded into the canonical in-memory representation; the Bank digest covers executable source as well as guidance and structure.
+
+### Certificates
+
+A Program may carry `qualification`, a compact certificate produced by the Host:
+
+```json
+{
+  "scope": "persistent",
+  "program_digest": "…",
+  "interface_hash": "…",
+  "trials": [{"episode": "train_0", "inputs_hash": "…", "reference_hash": "…", "result_hash": "…"}]
+}
+```
+
+`program_digest` covers every executable field (not `id`, `name`, `description` or the certificate itself). `interface_hash` covers the name and schemas of each permitted tool. The Learner writes a certificate only after training replay, replacement regression or merge regression passes. Automatic invocation (a Skeleton node, a Skill binding or an explicit agent `program` action) requires all of Eq. 4: the inputs bind (`Bind`), preconditions hold (`Pre`), every permitted tool exists (`Env`) and the certificate still matches the body and the current tool interfaces (`Cert`). Editing the source or changing a tool schema invalidates the certificate. The Program then needs fresh qualification before automatic reuse. An uncertified or ineligible Program is never executed silently; the operation continues under agent guidance. The bundled portable Banks predate certificates, so in a new environment their Programs serve as reference implementations until they are re-qualified by training replay.
 
 ## Skeletons
 
-Nodes are in topological order. Each has an `id`, an `after` list, and an optional `skill_id` or `program_id`. A node without a Program executes through the agent using its goal and referenced skill guidance. `execution_mode: "dynamic"` explicitly selects this mode even when a Skill has an implementation. Intermediate outputs must satisfy the node's output schema.
+Nodes are in topological order. Each has an `id`, an `after` list, and an optional `skill_id` or `program_id`. `execution_mode` is `programmatic` or `dynamic`:
+
+- `programmatic` nodes (with `allowed_tools`) run a unique eligible implementation. If none is eligible, the Runtime Programmer may compile and validate a task-local one. If that also fails, the node records `implementation_fallback` and continues under agent guidance.
+- `dynamic` nodes always run through the agent. A bound Skill is then guidance only, and its local outcome counts toward that Skill's utility.
+- Nodes without a mode (older Banks) use an eligible implementation when one exists and otherwise fall back to the agent.
+
+Intermediate outputs must satisfy the node's output schema.
 
 Input bindings are explicit:
 

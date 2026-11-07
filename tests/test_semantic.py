@@ -11,6 +11,7 @@ from skillcompiler.model import BudgetExceeded
 from skillcompiler.pipeline import Pipeline
 from skillcompiler.contracts import read, digest
 from skillcompiler.worker import ProgramWorker
+from skillcompiler.qualification import certificate
 from examples.key_value import Suite
 
 
@@ -57,6 +58,13 @@ def program(pid="p"):
         "allowed_tools": ["lookup"],
         "source": "def run(ctx, inputs):\n    return {'status':'ok', 'outputs':ctx.call('lookup', inputs)}\n",
     }
+
+
+def certified(p):
+    """Attach a persistent certificate as if training replay had passed."""
+    tools = Suite().open(Suite().tasks("test")[0]).tools()
+    p["qualification"] = certificate(p, tools, [{"passed": True, "episode": "t"}])
+    return p
 
 
 def skeleton(sid="s", skill_id="a", i="key", o="value"):
@@ -528,7 +536,10 @@ def test_runtime_preconditions_and_ambiguous_bindings_block_execution():
     s["program_ids"].append("q")
     with pytest.raises(ValueError, match="Ambiguous"):
         Runtime(None, FakeWorker(), planning_enabled=False).skill(
-            Bank(skills=[s], programs=[program(), program("q")]), "a", t.inputs, ctx
+            Bank(skills=[s], programs=[certified(program()), certified(program("q"))]),
+            "a",
+            t.inputs,
+            ctx,
         )
     assert ctx.calls == 0
 

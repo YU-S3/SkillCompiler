@@ -12,6 +12,7 @@ from skillcompiler.model import BudgetExceeded, ResponseContractError
 from skillcompiler.learning import Learner
 from skillcompiler.pipeline import Pipeline
 from skillcompiler.worker import ProgramWorker
+from skillcompiler.qualification import certificate
 from examples.key_value import Suite, Environment
 from examples.offline_demo import (
     DemoModel,
@@ -19,6 +20,14 @@ from examples.offline_demo import (
     lookup_contract,
     object_schema,
 )
+
+
+def certified(program):
+    """Attach a persistent certificate as if training replay had passed."""
+    tools = Environment(Suite().tasks("test")[0]).tools()
+    trial = {"passed": True, "episode": "fixture", "inputs_hash": "x"}
+    program["qualification"] = certificate(program, tools, [trial])
+    return program
 
 
 def asset(sid="lookup", i="key", o="value"):
@@ -138,7 +147,7 @@ def test_default_planner_constructs_and_rebinds_real_program():
     wrong = asset("distractor")
     wrong["name"] = "Read the requested key"
     wrong["effects"][0]["predicate"] = "different"
-    bank = Bank([s, wrong], [p])
+    bank = Bank([s, wrong], [certified(p)])
     before = bank.hash
 
     class Model(DemoModel):
@@ -273,7 +282,7 @@ def test_planner_real_docker_program_execution():
     }
     suite = Suite()
     t = suite.tasks("test")[0]
-    bank = Bank([s], [p])
+    bank = Bank([s], [certified(p)])
     before = bank.hash
     trace = Runtime(DemoModel(), ProgramWorker(image)).run(
         t, suite.open(t), bank, "test/0"
@@ -326,6 +335,7 @@ def two_step_analysis():
                 "value": {"from": "read", "field": "value"},
             },
             "after": ["read"],
+            "execution_mode": "agent",
         }
     )
     a["contract"]["output_schema"] = object_schema("answer", "string")
